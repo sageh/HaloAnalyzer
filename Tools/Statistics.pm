@@ -1,7 +1,7 @@
 # Statistics.pm. Written in 2006 by Pauli Pihajoki
 # Functionality for basic statistic operations, and an interface for
 # arbitrary row and column operations.
-package AMIGA::Statistics;
+package Tools::Statistics;
 
 use warnings;
 use strict;
@@ -45,14 +45,15 @@ sub new {
 
 	# Argument should be a 2D array. Go through it and make sure it's
 	# valid.
-	croak "new: arguments: 2D array" unless (@_);
+	croak "new: arguments: 2D array" if (@_ == 0 || @{$_[0]} == 0 
+		|| ref($_[0]->[0]));
 	my $cols;
 	$cols = scalar(@{$_[0]});
 	for my $row (@_) {
 		croak "new: argument not a valid 2D array" 
 			unless (ref($row) eq "ARRAY");
-		croak "new: found only ",scalar(@$row)," rows, expected ",
-		      $cols, " rows " if (@$row != $cols);
+		croak "new: found only ",scalar(@$row)," columns, expected ",
+		      $cols, " columns" if (@$row != $cols);
 	}
 
 	# Looks ok. Set the data, and create column view.
@@ -226,14 +227,14 @@ __END__
 
 =head1 NAME
 
-AMIGA::Statistics - Simple object oriented statistics module for handling 2D
+Tools::Statistics - Simple object oriented statistics module for handling 2D
 data formats.
 
 =head1 SYNOPSIS
 
-	use AMIGA::Statistics;
+	use Tools::Statistics;
 
-	my $stat = AMIGA::Statistics->new(\@some_2d_data);
+	my $stat = Tools::Statistics->new(@some_2d_data);
 
 	# Find out number of rows and columns
 	my $num_rows = $stat->rows();
@@ -274,7 +275,7 @@ data formats.
 
 =item new ( DATA )
 
-This is a constructor for a new AMIGA::Statistics object. C<DATA> is
+This is a constructor for a new Tools::Statistics object. C<DATA> is
 a 2D array (with uniform amount of columns on each row).
 
 The constructor does some primitive validation on the data, and creates

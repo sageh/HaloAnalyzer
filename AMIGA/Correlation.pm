@@ -4,8 +4,8 @@ package AMIGA::Correlation;
 use warnings;
 use strict;
 use Carp;
-use AMIGA::Random;
-use AMIGA::Vector;
+use Tools::Random;
+use Tools::Vector;
 
 our(@ISA, @EXPORT, @EXPORT_OK, $VERSION);
 
@@ -131,7 +131,7 @@ sub calculate_correlation {
 		@r = @$field;
 	}
 	else {
-		my $random = AMIGA::Random->new(verbose=>1);
+		my $random = Tools::Random->new(verbose=>1);
 		@r = $random->binomial_field(
 			dimension => $low_bound->dim(),
 			points => $N_r,
@@ -142,7 +142,7 @@ sub calculate_correlation {
 	# Vectorize the field for easier use, as the data that's passed in
 	# is already expressed via the Vector class
 	for (my $i=0; $i < @r; $i++) {
-		$r[$i] = AMIGA::Vector->new(@{$r[$i]});
+		$r[$i] = Tools::Vector->new(@{$r[$i]});
 	}
 
 	# If we want to use the external implementation for calculating
@@ -554,17 +554,17 @@ Arguments: C<ARGS> -- A hash table with the following possible keys:
 =item low_bound
 
 Low bound of the spatial distribution of the data. Should be 
-an AMIGA::Vector object.
+an Tools::Vector object.
 
 =item high_bound
 
 High bound of the spatial distribution of the data. Should be 
-an AMIGA::Vector object.
+an Tools::Vector object.
 
 =item data
 
 Data to calculate two-point correlation for. Should be a reference to an
-array of AMIGA::Vector objects.
+array of Tools::Vector objects.
 
 =item bins 
 
@@ -582,7 +582,7 @@ Parallel scales are given in L<bins>.
 
 I<Optional.> A precalculated comparison field with the same low and high
 bounds as the data, but randomly distributed. Should be a reference to an
-array of AMIGA::Vector objects.
+array of Tools::Vector objects.
 
 If this key is not specified, then Perl C<rand()> will be used to calculate
 a comparison field. This might not be as reliable as using some proven

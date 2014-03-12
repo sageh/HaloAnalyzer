@@ -1,0 +1,171 @@
+=pod
+
+=head1 NAME
+
+visualize_halos.c and visualize_halodump.c - Programs for visualizing the
+data contained in an AHF _halos file or a halodump file. The programs render
+a 3d view using OpenGL and faciliate user interaction via keyboard and mouse.
+The halos are shown color coded either by formation redshift 
+(visualize_halodump) or mass (visualize_halos).
+In addition, visualize_halos can animate the view by cycling through the _halos
+files passed as the argument.
+
+=head1 SYNOPSIS
+
+	# Visualizing halos with a 1024x768 screen in 32 bit colour
+	./visualize_halos -w 1024 -h 768 -d 32 10 SIMU.z0.100.AHF_halos \
+	SIMU.z0.000.AHF_halos
+
+	# Visualizing a halodump with the same parameters
+	./visualize_halodump -w 1024 -h 768 -d 32 10 \
+	SIMU.z0.000.AHF.halodump_halos_with_subhalos.dat
+
+=head1 ARGUMENTS
+
+Both programs recognize these command line arguments, which must be given in
+this order: C<[OPTS]> C<BOX> C<HALODUMP/HALOS [, HALOS [...]]>.
+
+=over 4
+
+=item *
+
+C<[OPTS]> -- I<Optional.> A group of POSIX compatible short arguments
+controlling the graphic settings of the program.
+
+=over 4
+
+=item *
+
+C<-w> -- The width of the screen to display, in pixels. Default value: 1024.
+
+=item *
+
+C<-h> -- The height of the screen to display, in pixels. Default value: 768.
+
+=item *
+
+C<-d> -- The colour depth of the screen to display, in bits. Default value: 32.
+
+=back
+
+=item *
+
+C<BOX> -- The size of the data box in megaparsecs.
+
+=item *
+
+C<HALODUMP/HALOS [, HALOS [...]]> -- Either a halodump file (for
+visualize_halodump), or one or more _halos files (for visualize_halos). 
+
+The visualize_halos program will animate by cycling through the _halos files by
+starting at the first one given as the argument and proceeding from there. This
+allows controlling the sequence of animation by changing the order of the
+arguments.
+
+=back
+
+=head1 MOUSE CONTROL
+
+In both programs, the 3d view is controlled by using the mouse. When the cursor
+is over the program screen, pressing left mouse button and moving the mouse
+will rotate the view around the center of the box. When the right mouse button
+is pressed, moving the mouse up and down will zoom in and out, respectively.
+
+=head1 KEYBOARD COMMANDS
+
+Both programs recognize the following keyboard commands.
+
+=over 4
+
+=item *
+
+C<1/shift + 1> -- Increase/decrease the blue to green colour transition value.
+
+=item *
+
+C<2/shift + 2> -- Increase/decrease the green to red colour transition value.
+
+=item *
+
+C<a/shift + a> -- Increase/decrease the alpha (opacity) value used in rendering
+the halos.
+
+=item *
+
+C<f/shift + f> -- Increase/decrease the field of view.
+
+=item *
+
+C<d> -- Toggle parameter info displays on/off.
+
+=item *
+
+C<i> -- Toggle mouse y-axis inversion on/off.
+
+=item *
+
+C<F12> -- Save a screenshot. The screenshots are saved as BMP files with names
+C<screenshot_0.bmp>, C<screenshot_1.bmp> etc. The numbering is sequential, and
+begins from zero at each fresh program restart. This means that old screenshots
+can get overwritten, if they are not moved or renamed beforehand.
+
+=item *
+
+C<ESC> -- Exit the program.
+
+=back
+
+In addition, the visualize_halos program recognizes the following keyboard
+commands:
+
+=over 4
+
+=item *
+
+C<SPACE> -- Toggle animation on/off.
+
+=item *
+
+C<LEFT ARROW KEY> -- Go one animation frame backwards.
+
+=item *
+
+C<RIGHT ARROW KEY> -- Go one animation frame forwards.
+
+=item *
+
+C<m/shift + m> -- Increase/decrease colour zero point mass. In other words,
+adjusts the location of the low end of the colour scale.
+
+=back
+
+=head1 AUTHOR
+
+Written in 2006 for the benefit of Tuorla Observatory Cosmological Simulations
+research group by Pauli Pihajoki.
+
+=head1 COPYRIGHT
+
+ Copyright (c) 2006, Pauli Pihajoki
+ All rights reserved.
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
+
+     * Redistributions of source code must retain the above copyright
+       notice, this list of conditions and the following disclaimer.
+     * Redistributions in binary form must reproduce the above copyright
+       notice, this list of conditions and the following disclaimer in the
+       documentation and/or other materials provided with the distribution.
+
+ THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND ANY
+ EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE REGENTS AND CONTRIBUTORS BE LIABLE FOR ANY
+ DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+=cut

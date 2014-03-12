@@ -1,5 +1,5 @@
 # Vector.pm. Written in 2006 by Pauli Pihajoki
-package AMIGA::Vector;
+package Tools::Vector;
 
 use warnings;
 use strict;
@@ -191,15 +191,15 @@ __END__
 
 =head1 NAME
 
-AMIGA::Vector - Object oriented module for vectors and vector operations.
+Tools::Vector - Object oriented module for vectors and vector operations.
 
 =head1 SYNOPSIS
 
-	use AMIGA::Vector;
+	use Tools::Vector;
 
 	# Create vectors in 3D.
-	my $x = AMIGA::Vector->new(1, 2, 3);
-	my $y = AMIGA::Vector->new(-1, 0, 0);
+	my $x = Tools::Vector->new(1, 2, 3);
+	my $y = Tools::Vector->new(-1, 0, 0);
 
 	# Addition and substraction operations are overloaded
 	# for ease of use.
@@ -214,7 +214,7 @@ AMIGA::Vector - Object oriented module for vectors and vector operations.
 	$z->add($y)->subtr($y); # leaves $z unchanged
 
 	# Dimensions must match
-	$z = AMIGA::Vector->new(1, 2, 3, 4);
+	$z = Tools::Vector->new(1, 2, 3, 4);
 	print "x + z", $x + $z, "\n"; # Causes an error!
 
 	# Vector operations
@@ -232,7 +232,7 @@ AMIGA::Vector - Object oriented module for vectors and vector operations.
 
 =item new ( COMPONENTS )
 
-This is a constructor for a new AMIGA::Vector object. C<COMPONENTS> should
+This is a constructor for a new Tools::Vector object. C<COMPONENTS> should
 be an array of the component values of the vector.
 
 =back
@@ -261,7 +261,7 @@ Return value: The resulting vector.
 Adds the vector C<VECTOR> to this vector, and then returns it.
 Note: Changes the vector for which the method was invoked.
 
-Arguments: C<VECTOR> -- an C<AMIGA::Vector> object.
+Arguments: C<VECTOR> -- an C<Tools::Vector> object.
 
 Return value: The resulting vector.
 
@@ -270,7 +270,7 @@ Return value: The resulting vector.
 Subtracts the vector C<VECTOR> from this vector, and then returns it.
 Note: Changes the vector for which the method was invoked.
 
-Arguments: C<VECTOR> -- an C<AMIGA::Vector> object.
+Arguments: C<VECTOR> -- an C<Tools::Vector> object.
 
 Return value: The resulting vector.
 
@@ -288,7 +288,7 @@ Return value: The resulting vector.
 Calculates the dot product between this vector and the vector
 C<VECTOR> given as argument.
 
-Arguments: C<VECTOR> -- an C<AMIGA::Vector> object.
+Arguments: C<VECTOR> -- an C<Tools::Vector> object.
 
 Return value: Dot product of the two vectors.
 

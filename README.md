@@ -37,6 +37,8 @@ GNU Make program and the Gnu Compiler Collection C/C++ compiler
 (gcc/g++) to compile . These Makefiles may or may not work for your
 system. Adjusting them to your liking is advised.
 
+For more information, check out the README file.
+
 Author
 ======
 

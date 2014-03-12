@@ -1,5 +1,5 @@
 # Random.pm. Written in 2006 by Pauli Pihajoki
-package AMIGA::Random;
+package Tools::Random;
 
 use warnings;
 use strict;
@@ -196,15 +196,15 @@ __END__
 
 =head1 NAME
 
-AMIGA::Random - Simple object oriented module for random number functionality.
+Tools::Random - Simple object oriented module for random number functionality.
 
 =head1 SYNOPSIS
 
-	use AMIGA::Random;
+	use Tools::Random;
 
 	# Create a new randomizer. This will also seed the random
 	# number generator (RNG) if it hasn't been seeded yet.
-	my $rnd = AMIGA::Random->new(verbose => 1);
+	my $rnd = Tools::Random->new(verbose => 1);
 
 	# A random number from range [$x, $y]
 	my $xynum = $rnd->rand($x, $y);
@@ -230,7 +230,7 @@ AMIGA::Random - Simple object oriented module for random number functionality.
 
 =item new ( OPTIONS )
 
-This is a constructor for a new AMIGA::Random object. C<OPTIONS> should be
+This is a constructor for a new Tools::Random object. C<OPTIONS> should be
 a hash table with the following possible keys:
 
 =over 4
@@ -248,7 +248,7 @@ Default: 0
 If the Perl RNG has not been seeded yet, the constructor provides a seed
 by calling C<srand(time ^ $$ ^ unpack "%L*", `ps axww | gzip`)> which should be
 sufficient for low criticality random data generation. This seed is then used
-by all instances of the C<AMIGA::Random> class.
+by all instances of the C<Tools::Random> class.
 
 =back
 

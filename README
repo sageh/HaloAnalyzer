@@ -1,0 +1,50 @@
+TOOL PACKAGE FOR AMIGA HALO FINDER DATA ANALYSIS
+
+The root directory contains several utility scripts for miscellaneous
+halo data analysis operations. These are written in Perl and use the
+AMIGA::HaloFinder Perl library, located in the AMIGA subdirectory.
+
+Also in the root directory are programs for calculating two-point correlations
+and generating binomial random fields. These are written in C and can be
+compiled by verifying the suitability of the included Makefile and running
+make. These programs have been documented in corresponding .pod files using
+Perl POD documentation. See below for how to generate HTML documentation.
+
+
+SUBDIRECTORIES
+
+AMIGA/
+
+Contains the .pm files of the AMIGA Halo Analyzer Perl library. The main
+class is AMIGA::HaloAnalyzer.
+
+Tools/
+
+Contains several useful Perl classes for tasks not directly related to 
+AMIGA data, such as basic statistics.
+
+docs/
+
+Contains a makedocs.sh shell script for generating a HTML documentation tree
+from the Perl POD documentation included in the package. The documentation
+tree is created in the docs directory.
+
+mersenne/
+
+Contains the original source code (mt19937ar.c, mt19937ar.h) of the Mersenne
+Twister pseudorandom number generator by Makoto Matsumoto, Takuji Nishimura
+and Mutsuo Saito. This code is used by the fieldgen.c program found in the
+root directory.
+
+parallelized/
+
+Contains MPI parallelized version of some of the programs found in the
+root directory. These can be compiled by editing the accompanying Makefile to
+suit the MPI library in use and then running make.
+
+visualize/
+
+Contains programs for visualizing AMIGA halo data interactively on the screen.
+This is done using the SDL library for user interaction and OpenGL for
+rendering. The programs can be compiled by editing the accompanying Makefile
+to suit the current system configuration and then running make.

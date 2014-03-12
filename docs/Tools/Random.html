@@ -1,0 +1,184 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Tools::Random - Simple object oriented module for random number functionality.</title>
+<link rev="made" href="mailto:feedback@suse.de" />
+</head>
+
+<body style="background-color: white">
+
+<p><a name="__index__"></a></p>
+<!-- INDEX BEGIN -->
+
+<ul>
+
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#initialisation">INITIALISATION</a></li>
+	<li><a href="#methods">METHODS</a></li>
+	<ul>
+
+		<li><a href="#rand____low____high___">rand ( [LOW [, HIGH] )</a></li>
+		<li><a href="#binomial_field___options__">binomial_field ( OPTIONS )</a></li>
+	</ul>
+
+	<li><a href="#author">AUTHOR</a></li>
+	<li><a href="#copyright">COPYRIGHT</a></li>
+</ul>
+<!-- INDEX END -->
+
+<hr />
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
+<p>Tools::Random - Simple object oriented module for random number functionality.</p>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<pre>
+        use Tools::Random;</pre>
+<pre>
+        # Create a new randomizer. This will also seed the random
+        # number generator (RNG) if it hasn't been seeded yet.
+        my $rnd = Tools::Random-&gt;new(verbose =&gt; 1);</pre>
+<pre>
+        # A random number from range [$x, $y]
+        my $xynum = $rnd-&gt;rand($x, $y);</pre>
+<pre>
+        # A random number from range [0, $x]
+        my $xnum = $rnd-&gt;rand($x);</pre>
+<pre>
+        # Works like a call to perl rand()
+        my $num = $rnd-&gt;rand();</pre>
+<pre>
+        # Create a binomial random field of 1000 points in 3 dimensions,
+        # (pseudo)uniformly distributed between given limits. Return
+        # it in a 2D array.
+        my @field = $rnd-&gt;binomial_field(
+                                points =&gt; 1000,
+                                dimensions =&gt; 3,
+                                low_bound =&gt; [-5, -3, -4],
+                                high_bound =&gt; [3, 4, 5]);</pre>
+<p>
+</p>
+<hr />
+<h1><a name="initialisation">INITIALISATION</a></h1>
+<dl>
+<dt><strong><a name="item_new">new ( OPTIONS )</a></strong><br />
+</dt>
+<dd>
+This is a constructor for a new Tools::Random object. <code>OPTIONS</code> should be
+a hash table with the following possible keys:
+</dd>
+<dl>
+<dt><strong><a name="item_verbose">verbose</a></strong><br />
+</dt>
+<dd>
+Controls the verbosity level of the module. Currently only two values are
+supported. Value 1 causes the module to output some information of the ongoing
+processes to standard output, while value 0 suppresses most output.
+</dd>
+<dd>
+<p>Default: 0</p>
+</dd>
+<p></p></dl>
+<p>If the Perl RNG has not been seeded yet, the constructor provides a seed
+by calling <code>srand(time ^ $$ ^ unpack &quot;%L*&quot;, `ps axww | gzip`)</code> which should be
+sufficient for low criticality random data generation. This seed is then used
+by all instances of the <code>Tools::Random</code> class.</p>
+</dl>
+<p>
+</p>
+<hr />
+<h1><a name="methods">METHODS</a></h1>
+<p>
+</p>
+<h2><a name="rand____low____high___">rand ( [LOW [, HIGH] )</a></h2>
+<p>Returns a random floating point number from a <em>half-closed interval</em>, i.e.
+for low bound <code>x</code> and high bound <code>y</code> a number from <code>[x,y)</code> is returned.</p>
+<p>When both parameters are provided, returns a random number between
+<code>LOW</code> and <code>HIGH</code>. If only one parameter is given, a random number between
+0 and the parameter is returned. If no parameters are given, a number between
+0 and 1 is returned.</p>
+<p>Arguments:</p>
+<ul>
+<li></li>
+<code>LOW</code> -- random number low bound, inclusive.
+<p></p>
+<li></li>
+<code>HIGH</code> -- random number high bound, exclusive.
+<p></p></ul>
+<p>Return value: A random floating point value between <code>LOW</code> and <code>HIGH</code>, 0 and
+<code>HIGH</code> or 0 and 1.</p>
+<p>
+</p>
+<h2><a name="binomial_field___options__">binomial_field ( OPTIONS )</a></h2>
+<p>Creates a series of random floating point vectors from an N-dimensional space
+between given limits. These are returned as a 2D Perl array.</p>
+<p>This method uses the standard Perl RNG to generate the data, and depending
+on the local implementation and the criticality of the application could 
+produce unsatisfactory data. It is recommended that a separate method using
+for example the Mersenne Twister algorithm be used for applications where
+high quality pseudorandom numbers are required.</p>
+<p>Arguments:</p>
+<ul>
+<li></li>
+<code>OPTIONS</code> -- a hash table with following possible keys:
+<dl>
+<dt><strong><a name="item_dimension">dimension</a></strong><br />
+</dt>
+<dd>
+The dimension N of each random vector.
+</dd>
+<dd>
+<p>Default: 1</p>
+</dd>
+<p></p>
+<dt><strong><a name="item_low_bound">low_bound</a></strong><br />
+</dt>
+<dd>
+The low limiting bound of the random vectors, inclusive. 
+Given as an array reference with N components.
+</dd>
+<dd>
+<p>Default: [0]</p>
+</dd>
+<p></p>
+<dt><strong><a name="item_high_bound">high_bound</a></strong><br />
+</dt>
+<dd>
+The high limiting bound of the random vectors, exclusive. 
+Given as an array reference with N components.
+</dd>
+<dd>
+<p>Default: [1]</p>
+</dd>
+<p></p>
+<dt><strong><a name="item_points">points</a></strong><br />
+</dt>
+<dd>
+The number of vectors to create.
+</dd>
+<dd>
+<p>Default: 1</p>
+</dd>
+<p></p></dl>
+</ul>
+<p>
+</p>
+<hr />
+<h1><a name="author">AUTHOR</a></h1>
+<p>Written in 2006 for the benefit of Tuorla Observatory Cosmological Simulations
+research group by Pauli Pihajoki.</p>
+<p>
+</p>
+<hr />
+<h1><a name="copyright">COPYRIGHT</a></h1>
+<p>Copyright (c) 2006 Pauli Pihajoki. All rights reserved. This program is
+free software; you can redistribute it and/or modify it under the same terms
+as Perl itself.</p>
+
+</body>
+
+</html>

@@ -43,8 +43,8 @@
 #include <math.h>
 
 /* Datatypes. */
-typedef unsigned long long ULONG;
-typedef long double LDOUBLE;
+typedef unsigned long ULONG;
+typedef double LDOUBLE;
 
 
 /* Struct defs and inlines using them. */
@@ -204,8 +204,8 @@ void read_bins(FILE *f, dataset *d) {
 	/* Read the bins. */
 	for (i=0; i < d->num_bins; i++) {
 		printf("Reading in bin %d... ", i);
-		fscanf(f, "%Lf %Lf", &d->bins[i][0], &d->bins[i][1]);
-		printf("%Lf %Lf\n", d->bins[i][0], d->bins[i][1]);
+		fscanf(f, "%lg %lg", &d->bins[i][0], &d->bins[i][1]);
+		printf("%lg %lg\n", d->bins[i][0], d->bins[i][1]);
 	}
 }
 
@@ -213,32 +213,32 @@ void read_data(FILE *f, field *d) {
 	ULONG i;
 
 	/* First, get the number of points. */
-	fscanf(f, "%Lu", &d->num_pts);
+	fscanf(f, "%lu", &d->num_pts);
 
 	if (d->num_pts <= 0) {
-		fprintf(stderr, "Invalid number of data points: %Lu\n",
+		fprintf(stderr, "Invalid number of data points: %lu\n",
 				d->num_pts);
 		exit(EXIT_FAILURE);
 	}
 	
 	/* Allocate space. */
-	printf("Allocating space for %Lu points...\n", d->num_pts);
+	printf("Allocating space for %lu points...\n", d->num_pts);
 	d->pts = (p3*)malloc((int)d->num_pts * sizeof(p3));
 	check_malloc(d->pts, __LINE__);
 	
 	/* Low and high bounds. */
 	printf("Reading high and low bounds...\n");
-	fscanf(f, "%Lf %Lf %Lf", 
+	fscanf(f, "%lg %lg %lg", 
 		&d->low_bound.x, &d->low_bound.y, &d->low_bound.z);
-	fscanf(f, "%Lf %Lf %Lf", 
+	fscanf(f, "%lg %lg %lg", 
 		&d->high_bound.x, &d->high_bound.y, &d->high_bound.z);
-	printf("low: %Lf %Lf %Lf high: %Lf %Lf %Lf\n",
+	printf("low: %lg %lg %lg high: %lg %lg %lg\n",
 		d->low_bound.x, d->low_bound.y, d->low_bound.z,
 		d->high_bound.x, d->high_bound.y, d->high_bound.z);
 
 	/* Then get the data. */
 	for (i=0; i < d->num_pts; i++) {
-		fscanf(f, "%Lf %Lf %Lf", 
+		fscanf(f, "%lg %lg %lg", 
 			&d->pts[i].x, &d->pts[i].y, &d->pts[i].z);
 	}
 }
@@ -292,7 +292,7 @@ void correlate(int corr_func, dataset *d, field *c, FILE *out) {
 	printf("DD and DR pairs\n");
 	for (i=0; i < d->data.num_pts; i++) {
 		/* Print some progress info. */
-		printf("%Lu ", i);
+		printf("%lu ", i);
 		if (i != 0 && (i % 10 == 0))
 			printf("\n");
 
@@ -330,7 +330,7 @@ void correlate(int corr_func, dataset *d, field *c, FILE *out) {
 	printf("RR pairs\n");
 	for (i=0; i < c->num_pts; i++) {
 		/* Print some progress info. */
-		printf("%Lu ", i);
+		printf("%lu ", i);
 		if (i != 0 && (i % 10 == 0))
 			printf("\n");
 
@@ -357,11 +357,11 @@ void correlate(int corr_func, dataset *d, field *c, FILE *out) {
 		LDOUBLE ksi, error;
 		LDOUBLE rat = c->num_pts/(LDOUBLE)d->data.num_pts;
 		for (k=0; k < d->num_bins; k++) {
-			printf("Bin %d [%Lg, %Lg] ", 
+			printf("Bin %d [%lg, %lg] ", 
 				k, d->bins[k][0], d->bins[k][1]);
-			printf("dd %Lu ", dd[k]);
-			printf("dr %Lu ", dr[k]);
-			printf("rr %Lu\n", rr[k]);
+			printf("dd %lu ", dd[k]);
+			printf("dr %lu ", dr[k]);
+			printf("rr %lu\n", rr[k]);
 			if (rr[k] == 0) {
 				/* XXX: Something like this is what _should_
 				 * be done, however, it would require
@@ -369,7 +369,7 @@ void correlate(int corr_func, dataset *d, field *c, FILE *out) {
 				/*
 				ksi = error = NAN;
 				*/
-				fprintf(out, "%Lf %Lf %s %s\n",
+				fprintf(out, "%lg %lg %s %s\n",
 					d->bins[k][0], d->bins[k][1],
 					"NaN", "NaN");
 			}
@@ -390,7 +390,7 @@ void correlate(int corr_func, dataset *d, field *c, FILE *out) {
 				*/
 				error = (1 + ksi)/sqrt(rr[k]/(rat*rat));
 
-				fprintf(out, "%Lg %Lg %Lg %Lg\n",
+				fprintf(out, "%lg %lg %lg %lg\n",
 					d->bins[k][0], d->bins[k][1],
 					ksi, error);
 			}

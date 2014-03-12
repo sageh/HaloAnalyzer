@@ -24,6 +24,8 @@ my $bins = 10;
 my $log = 1;
 my $components = 0;
 my $ages = 0;
+my $subhalos = 0;
+my $only_subs = 0;
 my $fieldfile = '';
 
 # Issue help message if no arguments.
@@ -41,6 +43,8 @@ GetOptions(
 	'log!' => \$log,
 	'components!' => \$components,
 	'ages!' => \$ages,
+	'subhalos!' => \$subhalos,
+	'only_subs!' => \$only_subs,
 	'help' => \&usage
 );
 
@@ -57,8 +61,10 @@ Valid options:
 --maxscale      Scale high bound
 --bins          Number of scale bins to use
 --log/--nolog   Whether to have logarithmic scale bins (default: on)
---ages/--noage  Whether to calculate correlation for youngest and oldest 20 % 
-                (default: off)
+--ages          Calculate correlation for youngest and oldest 20 % 
+--subhalos	Calculate correlation for most subhalo rich and most subhalo
+                poor 20 %
+--only_subs     Calculate correlation only for subhalos
 --components    Whether to calculate parallel and transverse correlations 
                 separately
 HALT
@@ -145,6 +151,86 @@ if ($ages) {
 		push @{$halodata[$i]}, $age;
 	}
 }
+# Else, if we want to do the separation by subhalo amounts, then we need
+# the knowledge of which halos are main halos, and then the subhalo amounts.
+elsif ($subhalos) {
+	# DEBUG:
+	print "Amount of halodata: ",scalar(@halodata),"\n";
+
+	# Pre-crop away everything outside the mass range
+	@halodata = @halodata[$hi..$li];
+
+	# DEBUG:
+	print "Amount of halodata after mass crop: ",scalar(@halodata),"\n";
+
+	print "Fetching all subhalo data...\n";
+	my %shdata = $analyzer->get_all_subhalo_data(
+		$analyzer->{z_values}[0]);
+
+	# Go through what we got and get only those halos that actually
+	# have subhalos.
+	my @tmpdata;
+	foreach my $halo (keys %shdata) {
+		if (@{$shdata{$halo}}) {
+			# We have subhalos. Get the corresponding column
+			# of halodata and add the subhalo amount column.
+			#print "Halo $halo has ",scalar(@{$shdata{$halo}}),
+			#" subhalos\n";
+			push @tmpdata, [@{$halodata[$halo]}, 
+				scalar(@{$shdata{$halo}})];
+		}
+	}
+
+	# DEBUG:
+	print "Found ",scalar(@tmpdata), " halos with subhalos.\n";
+
+	# Sort by subhalo amount and store in @halodata
+	my $shi = scalar(@{$tmpdata[0]})-1;
+	@halodata = sort {$a->[$shi] <=> $b->[$shi]} @tmpdata;
+
+	# DEBUG:
+	print "Found ",scalar(@halodata), " halos with subhalos.\n";
+
+	# Don't crop away any more halos
+	$hi = 0;
+	$li = $#halodata;
+}
+elsif ($only_subs) {
+	# DEBUG:
+	print "Amount of halodata: ",scalar(@halodata),"\n";
+
+	# Pre-crop away everything outside the mass range
+	@halodata = @halodata[$hi..$li];
+
+	# DEBUG:
+	print "Amount of halodata after mass crop: ",scalar(@halodata),"\n";
+
+	print "Fetching all subhalo data...\n";
+	my %shdata = $analyzer->get_all_subhalo_data(
+		$analyzer->{z_values}[0]);
+
+	# Go through the subhalo data and extract only subhalos
+	my @tmpdata;
+	foreach my $halo (keys %shdata) {
+		foreach my $subhalo (@{$shdata{$halo}}) {
+			# Add the correct halodata entry
+			push @tmpdata, $halodata[$subhalo];
+		}
+	}
+
+	# DEBUG:
+	print "Found ",scalar(@tmpdata), " subhalos.\n";
+
+	# Store in @halodata
+	@halodata = @tmpdata;
+
+	# DEBUG:
+	print "Found ",scalar(@halodata), " subhalos.\n";
+
+	# Don't crop away any more halos
+	$hi = 0;
+	$li = $#halodata;
+}
 
 # Then crop away the rest of the halodata
 @halodata = @halodata[$hi..$li];
@@ -162,6 +248,16 @@ if ($ages) {
 	printf "Youngest 20%%: %d oldest 20%%: %d\n", scalar(@young), 
 		scalar(@old);
 }
+elsif ($subhalos) {
+	# Get the 20 % of most subhalo poor and rich cases
+	my $num_halos = @halodata;
+	my $zi = scalar(@{$halodata[0]})-1;
+	@halodata = sort {$a->[$zi] <=> $b->[$zi]} @halodata;
+	@young = @halodata[0..($num_halos/5)];
+	@old = @halodata[($#halodata-$num_halos/5)..$#halodata];
+	printf "20%% least subhalos: %d 20%% most subhalos: %d\n", 
+		scalar(@young), scalar(@old);
+}
 
 # Get the correlations for both sets
 my @yc;
@@ -170,7 +266,7 @@ my %args;
 $args{bins} = \@scalebins;
 $args{field} = \@binfield if (@binfield);
 $args{trbins} = \@scalebins if ($components);
-if ($ages) {
+if ($ages || $subhalos) {
 	@yc = $analyzer->correlation( halodata => \@young, %args);
 	@oc = $analyzer->correlation( halodata => \@old, %args);
 }
@@ -191,9 +287,14 @@ my $print_result = sub {
 	print $fh $str;
 };
 
-if ($ages) {
+if ($ages || $subhalos) {
 	print OUT "# Mass interval: [$mass_lb, $mass_hb]\n";
-	print OUT "# Youngest 20%:\n";
+	if ($ages) {
+		print OUT "# Youngest 20%:\n";
+	}
+	else {
+		print OUT "# Most subhalo poor 20%:\n";
+	}
 	print OUT "# r_low r_high ", 
 	"ksi([r_low, r_high]) error\n";
 	foreach my $row (@yc) {
@@ -201,7 +302,12 @@ if ($ages) {
 	}
 	print OUT "\n\n";
 
-	print OUT "# Oldest 20%:\n";
+	if ($ages) {
+		print OUT "# Oldest 20%:\n";
+	}
+	else {
+		print OUT "# Most subhalo rich 20%:\n";
+	}
 	print OUT "# r_low r_high ", 
 	"ksi([r_low, r_high]) error\n";
 	foreach my $row (@oc) {

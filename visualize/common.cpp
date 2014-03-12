@@ -209,7 +209,8 @@ void set_fov(double fov, int screen_width, int screen_height) {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(fov,
-		(GLfloat)(screen_width)/(GLfloat)(screen_height), 0.1f, 500.0f);
+		(GLfloat)(screen_width)/(GLfloat)(screen_height), 
+		0.1f, 1000.0f);
 
 	glMatrixMode(GL_MODELVIEW);
 }

@@ -9,7 +9,7 @@ use File::Spec;
 use File::Temp;
 
 use AMIGA::MergerTree;
-use AMIGA::Vector;
+use Tools::Vector;
 use AMIGA::Correlation qw(calculate_correlation);
 
 our(@ISA, @EXPORT, @EXPORT_OK, $VERSION);
@@ -35,7 +35,6 @@ my %InstanceAttributes = (
 	# Paths and file names 
 	data_path => File::Spec->curdir(),
 	binary_path => File::Spec->curdir(),
-	work_path => File::Spec->curdir(),
 	halohistory_binary => 'HaloHistory',
 	correlator_binary => 'correlator',
 	component_correlator_binary => 'compcorr',
@@ -49,8 +48,7 @@ my %InstanceAttributes = (
 
 	# File format
 	halodump_columns => 74,
-#	modified_halodump_columns => 140,
-	modified_halodump_columns => 174,
+	modified_halodump_columns => 140,
 
 	# Physical parameters
 	box_size => 10,
@@ -291,8 +289,7 @@ sub create_halohistory_input {
 		# HaloHistory output file name
 		my $out = $self->{halohistory_output_template};
 		$out =~ s/%i/$index/g;
-#		$input .= File::Spec->catfile($path, $out);
-		$input .= "$out \n";
+		$input .= File::Spec->catfile($path, $out);
 
 		# Output string complete, store it
 		push @result, $input;
@@ -311,7 +308,6 @@ sub run_halohistory {
 	my $self = shift;
 	my $binpath = $self->{binary_path};
 	my $datapath = $self->{data_path};
-	my $workpath = $self->{work_path};
 	my $t = $self->{simufile_template};
 	my @a = @_;
 
@@ -322,21 +318,17 @@ sub run_halohistory {
 	# HaloHistory
 	foreach my $input (@hh_input) {
 		# Create a temporary file in the data directory
-#		my $tmpfile = new File::Temp(
-#			TEMPLATE => $self->{halohistory_input_template},
-#			DIR => $datapath);
-	        my $tmpfile = "tempfile";
-		open(TEMPPI, ">$tmpfile")  || die "\n $0 Cannot open $! \n";
-		# Store the data in it
-#		print $tmpfile $input;
-		print TEMPPI $input;
+		my $tmpfile = new File::Temp(
+			TEMPLATE => $self->{halohistory_input_template},
+			DIR => $datapath);
 
-#		print "$tmpfile \n";
-#		system("more $tmpfile");
+		# Store the data in it
+		print $tmpfile $input;
+
 		# Run halohistory
 		my $runcmd = File::Spec->catfile($binpath, 
 			$self->{halohistory_binary})
-			." < $workpath"."/$tmpfile 1>".File::Spec->devnull();
+			." < $tmpfile 1>".File::Spec->devnull();
 		print "Going to run: $runcmd\n" if ($self->verbose);
 		system($runcmd) == 0
 			or carp "Running HaloHistory failed";
@@ -505,7 +497,7 @@ sub track_halos {
 		# Add the info for the current (z=0) situation
 		my @tmparray;
 		push @tmparray, [$zvals[0], $oldindex];
-		my $qualityflag;
+
 		# Check the idx file for each z value (minus one, because we
 		# have one less _idx files than _halos files)
 		foreach (my $i=0; $i < @zvals-1; $i++) {
@@ -522,9 +514,8 @@ sub track_halos {
 				# Found it. Push the z-value and the
 				# corresponding halo index and re-iterate 
 				$oldindex = $idx_data[$i]->[$idx]->[1];
-				$qualityflag = $idx_data[$i]->[$idx]->[3];
-				push @tmparray, [$zvals[$i+1], $oldindex, $qualityflag];
-				print " --> halo $oldindex and quality $qualityflag at ",
+				push @tmparray, [$zvals[$i+1], $oldindex];
+				print " --> halo $oldindex at ",
 				"z = $zvals[$i+1]\n" if ($self->verbose);
 			}
 			else {
@@ -689,10 +680,8 @@ sub halohistory {
 		# row, preceded by the redshift value
 		my @ht = @{$halotrack{$halo}};
 		for (my $i=0; $i < @ht; $i++) {
-#			push @tmparray, [$ht[$i]->[0], 
-#				@{$halodata[$i]->[$ht[$i]->[1]]}];
-			push @tmparray, [$ht[$i][0], 
-				@{$halodata[$i]->[$ht[$i][1]]}, $ht[$i][2]];
+			push @tmparray, [$ht[$i]->[0], 
+				@{$halodata[$i]->[$ht[$i]->[1]]}];
 		}
 
 		# Before adding the array to the hash table, also save it to a
@@ -746,25 +735,15 @@ sub get_mass_evolution {
 		for (my $i=0; $i < @hh-1; $i++) {
 			# Get the times in gigayears corresponding to the two
 			# redshifts.
-#			$t1 = $self->z_to_gyr($hh[$i+1]->[0]);
-#			$t2 = $self->z_to_gyr($hh[$i]->[0]);
-#			$dt = abs($t1-$t2);
-#			$dz = abs($hh[$i]->[0] - $hh[$i+1]->[0]);
-#			$dm = $hh[$i]->[9] - $hh[$i+1]->[9];
-
-			$t1 = $self->z_to_gyr($hh[$i+1][0]);
-			$t2 = $self->z_to_gyr($hh[$i][0]);
+			$t1 = $self->z_to_gyr($hh[$i+1]->[0]);
+			$t2 = $self->z_to_gyr($hh[$i]->[0]);
 			$dt = abs($t1-$t2);
-			$dz = abs($hh[$i][0] - $hh[$i+1][0]);
-			$dm = $hh[$i][9] - $hh[$i+1][9];
+			$dz = abs($hh[$i]->[0] - $hh[$i+1]->[0]);
+			$dm = $hh[$i]->[9] - $hh[$i+1]->[9];
 
-			if($dz == 0.0 || $dt == 0.0) {
-			  print "$hh[$i+1][0] $hh[$i][0] \n";
-			  print "$t1 $t2 $dm DZ: $dz DT: $dt ZERO\n";
-			}
-			# Calculate the values and store the row
-			push @{$result{$halo}},
-			[$hh[$i]->[0], $t2, $hh[$i]->[9],
+			# Calculate the values and store the row.
+			push @{$result{$halo}}, 
+			[$hh[$i]->[0], $t2, $hh[$i]->[9], 
 			$dz, $dt, $dm, $dm/$dz, $dm/$dt];
 		}
 	}
@@ -879,6 +858,7 @@ sub modify_halodump {
 	       # - redshift when it became a subhalo
 	       # - redshift when it became a subhalo of it's z=0 mainhalo
 	       # - halodata from the latter of the two redshifts
+	       
 	       # For this, first track the halo
 	       %tmphash = $self->track_halos($row->[1]);
 	       my @ht = @{$tmphash{$row->[1]}};
@@ -926,7 +906,6 @@ sub modify_halodump {
 				       if ($sid == $id) {
 					       $zsh2 = $i;
 					       @zhd = @{$hd[$i]->[$id]};
-#					       print "@zhd \n";
 				       }
 			       }
 		       }
@@ -940,9 +919,7 @@ sub modify_halodump {
 		       # If the first redshift is not defined, then the
 		       # other one obviously also isn't. Set to 0.
 		       $zsh1 = $zsh2 = 0;
-		       print "$hd[0] $ht[0]\n";
-		       print "@zhd \n";
-		       @zhd = @{$hd[0]->[$ht[0]]} if $hd[0];
+		       @zhd = @{$hd[0]->[$ht[0]]};
 		       print "zsh1 not defined\n";
 	       }
 
@@ -963,7 +940,7 @@ sub modify_halodump {
 	       		$self->z_values()->[$zsh2], @zhd;
 
 	       push @result, [@$row, @mainhalo_cols, @subhalo_cols];
-       }
+       } 
 
 	return @result;
 }
@@ -1164,7 +1141,7 @@ sub shared_particles {
 # the progenitor halo properties. Return the data as a tree like data
 # structure for easy top down (z=0 ->) evaluation.
 #
-# Arguments: inclusion criterion, halo indexes at z=0
+# Arguments: inclusion criterion, maxlevels, halo indexes at z=0, 
 #
 # inclusion criterion: an array reference containing the following data:
 #   - minimum amount of particles that must go from halo A to halo B to consider
@@ -1174,26 +1151,37 @@ sub shared_particles {
 #     A a progenitor of B
 #   - minimum mass that a halo must have, in order to include it in the
 #     tree at all
+# maxlevels: maximum number of redshift levels to traverse back from z=0
 sub merger_tree {
 	my $self = shift;
 	my $path = $self->data_path; 
 
-	croak "merger_tree: arguments: inclusion criterion, halo indexes" 
-	if (@_ < 2);
+	croak "merger_tree: arguments: inclusion criterion, maxlevels, halo indexes, " 
+		if (@_ < 3);
 	my $c = shift;
-	my @z0_indexes = @_;
 
 	croak "merger_tree: arguments: need 3 inclusion criterion parameters" 
-	if (@$c != 3);
+		if (@$c != 3);
 
 	# Find the redshifts
 	my @z_vals = @{$self->{z_values}};
+
+	# set maxlevels if used
+	my $maxlevel = $#z_vals;
+	my $ml = shift;
+	croak "merger_tree: arguments: maxlevels < 0" if ($ml < 0);
+	if ($ml < $maxlevel-1) {
+		$maxlevel = $ml;
+	}
+
+	# Glomp the rest of the arguments into an array containing the halo indexes
+	my @z0_indexes = @_;
 
 	# We will need _halos data and particle sharing information for
 	# each redshift.
 	my %halodata;
 	my %sharedata;
-	foreach my $z (@z_vals[0..$#z_vals-1]) {
+	foreach my $z (@z_vals[0..$maxlevel-1]) {
 		$halodata{$z} = [$self->get_all_halodata($z)];
 		$sharedata{$z} = {$self->shared_particles($z)};
 	}
@@ -1229,7 +1217,7 @@ sub merger_tree {
 	# Do a recursive search through the data
 	my $z_idx = 0;
 	&find_and_add_nodes($result{$index_z0}, $index_z0, $c,
-		\@z_vals, \%halodata, \%sharedata, $z_idx);
+		\@z_vals, \%halodata, \%sharedata, $z_idx, $ml);
 
 	# Recursively search for halos matching criterion
 	sub find_and_add_nodes {
@@ -1247,9 +1235,11 @@ sub merger_tree {
 		my $sd = shift;
 		# Index to z_vals table for this level
 		my $zi = shift;
+		# Maximum z level
+		my $mz = shift;
 
 		# Stop if we are at the last possible redshift
-		if ($zi >= $#z_vals-1) {
+		if ($zi >= $mz-1) {
 			return;
 		}
 
@@ -1283,7 +1273,7 @@ sub merger_tree {
 
 		foreach my $key (keys (%{$$ph[1]})) {
 			&find_and_add_nodes($$ph[1]{$key}, $key, $c,
-				\@z_vals, $hd, $sd, $zi + 1);
+				\@z_vals, $hd, $sd, $zi + 1, $mz);
 		}
 	}
 
@@ -1349,8 +1339,8 @@ sub correlation {
 
 	# Our data is distributed in 3 dimensions, between (0, 0, 0) and
 	# (b, b, b) where b is the box size.
-	my $low_bound = AMIGA::Vector->new(0, 0, 0);
-	my $high_bound = AMIGA::Vector->new(
+	my $low_bound = Tools::Vector->new(0, 0, 0);
+	my $high_bound = Tools::Vector->new(
 		$self->box_size, $self->box_size, $self->box_size); 
 
 	# Prepare an array reference where we store the data
@@ -1358,7 +1348,7 @@ sub correlation {
 
 	# Fetch data for the halos specified, and vectorize it
 	for (@halodata) {
-		push @inputdata, AMIGA::Vector->new(@{$_}[2..4]);
+		push @inputdata, Tools::Vector->new(@{$_}[2..4]);
 	}
 	print "inputdata: ",scalar(@inputdata),"\n"
 	if ($self->verbose());
@@ -1414,34 +1404,51 @@ sub z_to_gyr {
 	# Go through the data and try to match the given redshift by finding
 	# the value closest to the given one.
 
-	# Index of the candidate
-	my $cnd = 0;;
-	for (my $i=0; $i < @time_data; $i++) {
-#		if (abs($time_data[$i]->[0] - $z) 
-#			< abs($time_data[$cnd]->[0] - $z)) {
-		if (abs($time_data[$i][0] - $z) 
-			< abs($time_data[$cnd][0] - $z)) {
-			# Found a better match
-			$cnd = $i;
+	## Index of the candidate
+	#my $cnd = 0;
+	#for (my $i=0; $i < @time_data; $i++) {
+	#	if (abs($time_data[$i]->[0] - $z) 
+	#		< abs($time_data[$cnd]->[0] - $z)) {
+	#		# Found a better match
+	#		$cnd = $i;
+	#	}
+	#}
+	#
+	## Before returning the value, check that the difference is not greater
+	## than some epsilon. For now, use 0.05.
+	#my $epsilon = 0.05;
+	#
+	#if (abs($time_data[$cnd]->[0] - $z) > $epsilon) {
+	#	# Didn't find it. Carp and return undef to signify error;
+	#	carp "Couldn't find redshift $z from $self->simu_logfile";
+	#	return undef;
+	#}
+	#else {
+	#	# Return the value scaled by the hubble constant to get
+	#	# gigayears in standard units.
+	#	return $time_data[$cnd]->[2]/$self->hubble_constant;
+	#}
+
+	# XXX: The previous algorithm has problems with simulation restarts,
+	# because these can cause outputs at very closely separated redshifts.
+	# This in turn causes two different redshifts to have the same
+	# value in gigayears, which isn't good. So, we use a linear
+	# interpolation from closest points instead.
+
+	# Linearly interpolate between closest values found.
+	# Note: The @time_data table is sorted by descending redshift value.
+	my $li= 0;
+	for (my $i=0; $i < @time_data-1; $i++) {
+		if ($z < $time_data[$i]->[0]) {
+			$li = $i;
 		}
 	}
 
-	# Before returning the value, check that the difference is not greater
-	# than some epsilon. For now, use 0.05.
-	my $epsilon = 0.05;
+	my ($lx, $hx) = ($time_data[$li]->[0], $time_data[$li+1]->[0]);
+	my ($ly, $hy) = ($time_data[$li]->[2], $time_data[$li+1]->[2]);
+	my $t = ($hy-$ly)/($hx-$lx)*($z-$lx) + $ly;
 
-#	if (abs($time_data[$cnd]->[0] - $z) > $epsilon) {
-	if (abs($time_data[$cnd][0] - $z) > $epsilon) {
-		# Didn't find it. Carp and return undef to signify error;
-		carp "Couldn't find redshift $z from $self->simu_logfile";
-		return undef;
-	}
-	else {
-		# Return the value scaled by the hubble constant to get
-		# gigayears in standard units.
-#		return $time_data[$cnd]->[2]/$self->hubble_constant;
-		return $time_data[$cnd][2]/$self->hubble_constant;
-	}
+	return $t/$self->hubble_constant();
 }
 
 # Convert the realspace coordinates of halodata to redshift coordinates
@@ -1457,14 +1464,14 @@ sub realspace_to_z_space {
 	my $halodata = shift;
 	my $point = shift;
 
-	# Go through the halodata and calculate results. Use AMIGA::Vectors
+	# Go through the halodata and calculate results. Use Tools::Vectors
 	# for convenience.
 	my @result;
-	$point = AMIGA::Vector->new(@$point);
+	$point = Tools::Vector->new(@$point);
 	for (@$halodata) {
 		# Get the velocity and relative position vectors
-		my $vel = AMIGA::Vector->new(@$_[5..7]);
-		my $pos = AMIGA::Vector->new(@$_[2..4]);
+		my $vel = Tools::Vector->new(@$_[5..7]);
+		my $pos = Tools::Vector->new(@$_[2..4]);
 		#print "pos: $pos vel: $vel\n";
 		my $pos_rel = $pos - $point;
 
@@ -1495,7 +1502,7 @@ sub realspace_to_z_space {
 # Helper subroutines #
 ######################
 
-# Extracts all floating point numbers found in a file name
+# Extracts all unsigned decimal form floating point numbers found in a file name
 # Argument: file name
 sub get_floats_from_filename {
 	my $fname = shift;
@@ -1512,9 +1519,21 @@ sub get_floats_from_filename {
 # and splits it into a two dimensional array
 #
 # Arguments: filename (complete with path)
+
+# XXX: Use explicit memoizing of arguments to trade RAM for speed. For
+# modify_halodump at least this results in a huge speedup.
+my %memoize;
 sub parse_datafile {
 	croak "parse_datafile: arguments: filename (with path)" if (@_ != 1);
 	my $infile = shift;
+
+	# If we have already read this file once, just return what we
+	# parsed the last time.
+	if (exists $memoize{$infile}) {
+		return $memoize{$infile};
+	}
+
+	# Otherwise, parse the file.
 
 	# Open the file and split into an array
 	open (IN, "<$infile") 
@@ -1523,13 +1542,16 @@ sub parse_datafile {
 	while (<IN>) {
 		chomp;
 		# Ignore comments
-		next if (/^#/);
+		next if (/^#/o);
 
 		# Push an array reference so that we get a two dimensional
 		# array as a result
 		push @result, [split];
 	}
 	close IN;
+
+	# Memoize it for future use.
+	$memoize{$infile} = \@result;
 
 	return @result;
 }
@@ -1743,13 +1765,13 @@ AMIGA::HaloAnalyzer - AMIGA data analysis package
 
 	# Tracing the changes in halo index number across 
 	# redshifts starting from z = 0.
-#	my %halotrace = $analyzer->trace_halos(@halo_indexes);
-#	foreach my $halo (keys %halotrace) {
-#		print "Backtrace of halo $halo across redshifts:\n";
-#		foreach my $row (@{$halotrace{$halo}}) {
-#			print "Redshift $row->[0], index $row->[1]\n";
-#		}
-#	}
+	my %halotrace = $analyzer->trace_halos(@halo_indexes);
+	foreach my $halo (keys %halotrace) {
+		print "Backtrace of halo $halo across redshifts:\n";
+		foreach my $row (@{$halotrace{$halo}}) {
+			print "Redshift $row->[0], index $row->[1]\n";
+		}
+	}
 
 	# Retrieving halo history data for given halos.
 	my %halohistory = $analyzer->halohistory(@halo_indexes);

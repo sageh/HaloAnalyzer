@@ -18,9 +18,9 @@ require AMIGA::HaloAnalyzer; import AMIGA::HaloAnalyzer;
 # Main program code
 ###################
 
-unless (@ARGV >= 3 && $ARGV[0] < @{AMIGA::HaloAnalyzer->column_names()}) {
+unless (@ARGV >= 4 && $ARGV[0] < @{AMIGA::HaloAnalyzer->column_names()}) {
 	print "Arguments: parameter index (circles), minimum halo mass, ",
-	"halo indexes\n",
+	"number of z lookback levels, halo indexes\n",
 	"parameter index should be one of the following:\n";
 	for (my $i=0; $i < @{AMIGA::HaloAnalyzer->column_names()}; $i++) {
 		print "$i => ".AMIGA::HaloAnalyzer->column_names()->[$i]."\n";
@@ -28,7 +28,7 @@ unless (@ARGV >= 3 && $ARGV[0] < @{AMIGA::HaloAnalyzer->column_names()}) {
 	exit 1;
 }
 
-my ($p_index, $min_mass, @halos) = @ARGV;
+my ($p_index, $min_mass, $maxzlevel, @halos) = @ARGV;
 
 # Presume that the script is run from the data directory.
 my $datadir = File::Spec->curdir();
@@ -43,7 +43,7 @@ my $analyzer = AMIGA::HaloAnalyzer->new(
 my @z_vals = @{$analyzer->z_values()};
 
 # Create the merger tree structure
-my %tree = $analyzer->merger_tree([0.5, 0.7, $min_mass], @halos);
+my %tree = $analyzer->merger_tree([0.5, 0.7, $min_mass], $maxzlevel, @halos);
 
 # Fetch all subhalo data
 my @shdata;

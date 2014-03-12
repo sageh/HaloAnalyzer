@@ -51,21 +51,21 @@ estimator.</p>
 </dt>
 <dd>
 Low bound of the spatial distribution of the data. Should be 
-an AMIGA::Vector object.
+an Tools::Vector object.
 </dd>
 <p></p>
 <dt><strong><a name="item_high_bound">high_bound</a></strong><br />
 </dt>
 <dd>
 High bound of the spatial distribution of the data. Should be 
-an AMIGA::Vector object.
+an Tools::Vector object.
 </dd>
 <p></p>
 <dt><strong><a name="item_data">data</a></strong><br />
 </dt>
 <dd>
 Data to calculate two-point correlation for. Should be a reference to an
-array of AMIGA::Vector objects.
+array of Tools::Vector objects.
 </dd>
 <p></p>
 <dt><strong><a name="item_bins">bins</a></strong><br />
@@ -89,7 +89,7 @@ Parallel scales are given in <a href="#item_bins">bins</a>.
 <dd>
 <em>Optional.</em> A precalculated comparison field with the same low and high
 bounds as the data, but randomly distributed. Should be a reference to an
-array of AMIGA::Vector objects.
+array of Tools::Vector objects.
 </dd>
 <dd>
 <p>If this key is not specified, then Perl <code>rand()</code> will be used to calculate
