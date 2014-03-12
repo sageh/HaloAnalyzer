@@ -1,0 +1,114 @@
+=pod
+
+=head1 NAME
+
+compcorr.c -- A program for calculating values of several different
+correlation function estimators separately for both transverse and parallel
+components as seen from origin using given data and random samples.
+
+=head1 SYNOPSIS
+
+	# Hamilton estimator
+	./compcorr correlation.dat data.dat random_sample.dat 4
+
+	# Landy-Szalay estimator by default
+	./compcorr correlation.dat data.dat random_sample.dat
+
+=head1 ARGUMENTS
+
+The following arguments must be given, in this order: C<OUT> C<DATA> C<CMP>.
+In addition, C<METHOD> can be given.
+
+=over 4
+
+=item *
+
+C<OUT> -- Filename where the calculated data should be stored. 
+
+=item *
+
+C<DATA> -- Filename where to search for the data for which the correlation
+function estimator should be calculated for.
+
+=item *
+
+C<CMP> -- Filename where to search for the binomial random field to use in
+the Monte Carlo calculation.
+
+=item *
+
+C<METHOD> -- I<Optional.> Which correlation estimator to use. Valid choices
+are:
+
+=over 4
+
+=item * 
+
+1 => Peebles-Hauser (1974) estimator.
+
+=item * 
+
+2 => Davis-Peebles (1983) estimator.
+
+=item * 
+
+3 => Hamilton (1993) estimator.
+
+=item * 
+
+4 => Landy-Szalay (1993) estimator.
+
+=back
+
+=back
+
+=head1 FILE FORMATS
+
+All the files are to be in ASCII format, with numerical fields separated
+by whitespaces and newlines for human readability.
+
+=head2 RANDOM SAMPLE
+
+The random sample file should have the following format:
+
+	number of points (N)
+	data low bound (3 components, separated by whitespace)
+	data high bound (3 components, separated by whitespace)
+	point 1 (3 components, separated by whitespace)
+	.
+	.
+	.
+	point N (3 components, separated by whitespace)
+
+=head2 DATA FILE
+
+The data file should have a format otherwise identical to the random sample
+file, except that the following rows should be added to the very beginning of
+the file:
+
+	number of parallel scale bins (N_p)
+	bin 1 (2 components, low and high bounds, whitespace separated)
+	.
+	.
+	bin N_p 
+	number of transverse scale bins (N_t)
+	bin 1 (2 components, low and high bounds, whitespace separated)
+	.
+	.
+	bin N_t 
+
+=head2 OUTPUT FILE
+
+Result in OUTFILE will have one row for each bin, with the following
+columns in this order: bin low bound, high bound, value of ksi, Poisson error
+
+=head1 AUTHOR
+
+Written in 2006 for the benefit of Tuorla Observatory Cosmological Simulations
+research group by Pauli Pihajoki.
+
+=head1 COPYRIGHT
+
+Copyright (c) 2006 Pauli Pihajoki. All rights reserved. 
+
+=cut

@@ -1,0 +1,135 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>AMIGA::MergerTree - An object oriented tree structure representation of
+halo data.</title>
+<link rev="made" href="mailto:feedback@suse.de" />
+</head>
+
+<body style="background-color: white">
+
+<p><a name="__index__"></a></p>
+<!-- INDEX BEGIN -->
+
+<ul>
+
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#initialisation">INITIALISATION</a></li>
+	<li><a href="#methods">METHODS</a></li>
+	<ul>
+
+		<li><a href="#root_node____">root_node ( )</a></li>
+		<li><a href="#double_link____">double_link ( )</a></li>
+		<li><a href="#level_view____">level_view ( )</a></li>
+		<li><a href="#branchings____node___">branchings ( [NODE] )</a></li>
+	</ul>
+
+	<li><a href="#author">AUTHOR</a></li>
+	<li><a href="#copyright">COPYRIGHT</a></li>
+</ul>
+<!-- INDEX END -->
+
+<hr />
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
+<p>AMIGA::MergerTree - An object oriented tree structure representation of
+halo data.</p>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<pre>
+        use AMIGA::MergerTree;</pre>
+<pre>
+        my $tree = AMIGA::MergerTree-&gt;new(\%my_tree_structure);</pre>
+<p>
+</p>
+<hr />
+<h1><a name="initialisation">INITIALISATION</a></h1>
+<dl>
+<dt><strong><a name="item_new">new ( TREE )</a></strong><br />
+</dt>
+<dd>
+This is the constructor for a new AMIGA::MergerTree object. <code>TREE</code> is 
+a reference to a hash table containing the recursive tree structure.
+</dd>
+<dd>
+<p>This structure should consist of a hash table with halo indexes pointing to a
+array references containing:</p>
+</dd>
+<ul>
+<li></li>
+Array reference to the _halos data for the halo.
+<p></p>
+<li></li>
+A hash table with progenitor halo indexes pointing to array references
+containing:
+<ul>
+<li></li>
+Array reference to the _halos data for the halo.
+<p></p>
+<li></li>
+A hash table with the progenitor indexes of this halo pointing to identical
+array references as above, with the recursion continuing through the tree.
+<p></p></ul>
+</ul>
+<p>The tree structure of the MergerTree is so an unordered tree, that can be
+only walked depthwards, i.e. from root node towards leaf nodes.</p>
+</dl>
+<p>
+</p>
+<hr />
+<h1><a name="methods">METHODS</a></h1>
+<p>
+</p>
+<h2><a name="root_node____">root_node ( )</a></h2>
+<p>Returns the first node in the raw tree structure, as described in 
+<a href="#initialisation">INITIALISATION</a>.</p>
+<p>Arguments: -</p>
+<p>Return value: The root node of the tree structure.</p>
+<p>
+</p>
+<h2><a name="double_link____">double_link ( )</a></h2>
+<p>Makes the whole tree doubly linked, adding to each node array a hash reference
+of the parent node. This allows walking the tree in both directions.</p>
+<p>Note: This method alters the object that it was invoked for. The process is
+irreversible.</p>
+<p>Arguments: -</p>
+<p>Return value: -</p>
+<p>
+</p>
+<h2><a name="level_view____">level_view ( )</a></h2>
+<p>Returns a 2D array of the contents of the tree structure, with
+the first dimension being the depth level of the tree, and the second the
+nodes at that depth. Thus the number of columns at each row equals the number
+of nodes at that depth.</p>
+<p>Arguments: -</p>
+<p>Return value: A 2D array of tree contents.</p>
+<p>
+</p>
+<h2><a name="branchings____node___">branchings ( [NODE] )</a></h2>
+<p>Returns the total number of branchings that occur in the tree after the node
+given in <code>NODE</code> or after the root node, if called with no arguments.</p>
+<p>Arguments: <code>NODE</code> -- reference to an array containing node information. See
+<a href="#initialisation">INITIALISATION</a>.</p>
+<p>Return value: Total number of branchings depthwards from the given node
+or from the root node.</p>
+<p>
+</p>
+<hr />
+<h1><a name="author">AUTHOR</a></h1>
+<p>Written in 2006 for the benefit of Tuorla Observatory Cosmological Simulations
+research group by Pauli Pihajoki.</p>
+<p>
+</p>
+<hr />
+<h1><a name="copyright">COPYRIGHT</a></h1>
+<p>Copyright (c) 2006 Pauli Pihajoki. All rights reserved. This program is
+free software; you can redistribute it and/or modify it under the same terms
+as Perl itself.</p>
+
+</body>
+
+</html>

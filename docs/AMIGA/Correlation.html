@@ -1,0 +1,214 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>AMIGA::Correlation - Implementation of Landy-Szalay two-point correlation 
+estimator.</title>
+<link rev="made" href="mailto:feedback@suse.de" />
+</head>
+
+<body style="background-color: white">
+
+<p><a name="__index__"></a></p>
+<!-- INDEX BEGIN -->
+
+<ul>
+
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#functions">FUNCTIONS</a></li>
+	<ul>
+
+		<li><a href="#calculate_correlation___args__">calculate_correlation ( ARGS )</a></li>
+	</ul>
+
+	<li><a href="#author">AUTHOR</a></li>
+	<li><a href="#copyright">COPYRIGHT</a></li>
+</ul>
+<!-- INDEX END -->
+
+<hr />
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
+<p>AMIGA::Correlation - Implementation of Landy-Szalay two-point correlation 
+estimator.</p>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<pre>
+        use AMIGA::Correlation qw(calculate_correlation);</pre>
+<p>
+</p>
+<hr />
+<h1><a name="functions">FUNCTIONS</a></h1>
+<p>
+</p>
+<h2><a name="calculate_correlation___args__">calculate_correlation ( ARGS )</a></h2>
+<p>Arguments: <code>ARGS</code> -- A hash table with the following possible keys:</p>
+<dl>
+<dt><strong><a name="item_low_bound">low_bound</a></strong><br />
+</dt>
+<dd>
+Low bound of the spatial distribution of the data. Should be 
+an AMIGA::Vector object.
+</dd>
+<p></p>
+<dt><strong><a name="item_high_bound">high_bound</a></strong><br />
+</dt>
+<dd>
+High bound of the spatial distribution of the data. Should be 
+an AMIGA::Vector object.
+</dd>
+<p></p>
+<dt><strong><a name="item_data">data</a></strong><br />
+</dt>
+<dd>
+Data to calculate two-point correlation for. Should be a reference to an
+array of AMIGA::Vector objects.
+</dd>
+<p></p>
+<dt><strong><a name="item_bins">bins</a></strong><br />
+</dt>
+<dd>
+An array reference of scale bins. Each bin in itself should be an array
+reference of two scalars, bin low and high bound. If <a href="#item_trbins">trbins</a> is given,
+then these bins are taken as the parallel component bins.
+</dd>
+<p></p>
+<dt><strong><a name="item_trbins">trbins</a></strong><br />
+</dt>
+<dd>
+An array reference of transverse scale bins. If this key is given, then
+the correlation is calculated separately for parallel and transverse components.
+Parallel scales are given in <a href="#item_bins">bins</a>.
+</dd>
+<p></p>
+<dt><strong><a name="item_field">field</a></strong><br />
+</dt>
+<dd>
+<em>Optional.</em> A precalculated comparison field with the same low and high
+bounds as the data, but randomly distributed. Should be a reference to an
+array of AMIGA::Vector objects.
+</dd>
+<dd>
+<p>If this key is not specified, then Perl <code>rand()</code> will be used to calculate
+a comparison field. This might not be as reliable as using some proven
+algorithm, such as the Mersenne Twister.</p>
+</dd>
+<p></p>
+<dt><strong><a name="item_external_prg">external_prg</a></strong><br />
+</dt>
+<dd>
+<em>Optional.</em> Path and filename of an external program to do calculationally
+intensive operations, i.e. pair length calculation and binning, and calculating
+the estimator value. Using the provided <strong>correlator</strong> program is strongly
+recommended, as calculating the correlation with pure Perl is rather slow.
+</dd>
+<dd>
+<p>The program should conform to the following calling convention:</p>
+</dd>
+<dd>
+<pre>
+        external_prg OUT DATA CMP</pre>
+</dd>
+<dd>
+<p>These command line arguments should be of the following form:</p>
+</dd>
+<ul>
+<li></li>
+<code>OUT</code> -- Name of the in which to output the data. Output should have
+one row per scale bin and each row should have the following values in
+order: bin low bound, bin high bound, value of correlation estimator, 
+Poisson error.
+<p></p>
+<li></li>
+<code>DATA</code> -- Name of the data input file. It should have the following rows
+in order:
+<ul>
+<li></li>
+number of scale bins
+<p></p>
+<li></li>
+scale bin low bound and high bound separated by whitespace for each 
+scale bin
+<p></p>
+<li></li>
+number of data points
+<p></p>
+<li></li>
+data low bound (3 components separated with whitespace)
+<p></p>
+<li></li>
+data high bound (3 components separated with whitespace)
+<p></p>
+<li></li>
+data points (3 components separated with whitespace)
+<p></p></ul>
+<p>Example of a data file:</p>
+<pre>
+        6
+        0.01 0.03162
+        0.03162 0.1
+        0.1 0.3162
+        0.3162 1.0
+        1.0 3.162
+        3.162 10.0
+        200
+        0 0 0
+        1 1 1
+        0.290558803201751 0.970668561381416 0.485018308778432
+        0.83400878482184 0.216630258260086 0.542955000637434
+        .
+        .
+        etc.</pre>
+<li></li>
+<code>CMP</code> -- Name of the comparison field file. It should have the following rows
+in order:
+<ul>
+<li></li>
+number of data points
+<p></p>
+<li></li>
+data low bound (3 components separated with whitespace)
+<p></p>
+<li></li>
+data high bound (3 components separated with whitespace)
+<p></p>
+<li></li>
+data points (3 components separated with whitespace)
+<p></p></ul>
+<p>Example of a comparison field file:</p>
+<pre>
+        1000
+        0 0 0
+        1 1 1
+        0.290558803201751 0.970668561381416 0.485018308778432
+        0.83400878482184 0.216630258260086 0.542955000637434
+        .
+        .</pre>
+</ul>
+</dl>
+<p>If the correlation is done for both components, then the <code>DATA</code> file should
+have two sequential sets of bin rows, first for the parallel, then for the
+transverse component.</p>
+<p>Return value: A 2D array containing one row for each scale bin, or if in
+component mode, <code>P*T</code> rows, where <code>P</code> is the number or parallel scale bins and
+<code>T</code> the number of transverse scale bins.</p>
+<p>
+</p>
+<hr />
+<h1><a name="author">AUTHOR</a></h1>
+<p>Written in 2006 for the benefit of Tuorla Observatory Cosmological Simulations
+research group by Pauli Pihajoki.</p>
+<p>
+</p>
+<hr />
+<h1><a name="copyright">COPYRIGHT</a></h1>
+<p>Copyright (c) 2006 Pauli Pihajoki. All rights reserved. This program is
+free software; you can redistribute it and/or modify it under the same terms
+as Perl itself.</p>
+
+</body>
+
+</html>

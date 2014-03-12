@@ -1,0 +1,177 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>AMIGA::Vector - Object oriented module for vectors and vector operations.</title>
+<link rev="made" href="mailto:feedback@suse.de" />
+</head>
+
+<body style="background-color: white">
+
+<p><a name="__index__"></a></p>
+<!-- INDEX BEGIN -->
+
+<ul>
+
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#initialisation">INITIALISATION</a></li>
+	<li><a href="#methods">METHODS</a></li>
+	<ul>
+
+		<li><a href="#copy____">copy ( )</a></li>
+		<li><a href="#mult___real__">mult ( REAL )</a></li>
+		<li><a href="#add___vector__">add ( VECTOR )</a></li>
+		<li><a href="#subtr___vector__">subtr ( VECTOR )</a></li>
+		<li><a href="#neg____">neg ( )</a></li>
+		<li><a href="#dot___vector__">dot ( VECTOR )</a></li>
+		<li><a href="#length____">length ( )</a></li>
+		<li><a href="#to_str____">to_str ( )</a></li>
+		<li><a href="#dim____">dim ( )</a></li>
+		<li><a href="#to_array____">to_array ( )</a></li>
+	</ul>
+
+	<li><a href="#author">AUTHOR</a></li>
+	<li><a href="#copyright">COPYRIGHT</a></li>
+</ul>
+<!-- INDEX END -->
+
+<hr />
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
+<p>AMIGA::Vector - Object oriented module for vectors and vector operations.</p>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<pre>
+        use AMIGA::Vector;</pre>
+<pre>
+        # Create vectors in 3D.
+        my $x = AMIGA::Vector-&gt;new(1, 2, 3);
+        my $y = AMIGA::Vector-&gt;new(-1, 0, 0);</pre>
+<pre>
+        # Addition and substraction operations are overloaded
+        # for ease of use.
+        my $z = $x + $y; # $z is now [0, 2, 3]
+        print &quot;x - y: &quot;, $x-$y, &quot;\n&quot;; # prints [2 2 3]
+        print &quot;-x: &quot;, -$x, &quot;\n&quot;; # prints [-1 -2 -3]</pre>
+<pre>
+        # They can be called explicitly also, and can be
+        # combined
+        $z-&gt;add($y);   # $z now [-1, 2, 3]
+        $z-&gt;subtr($y); # $z back to [0, 2, 3]
+        $z-&gt;add($y)-&gt;subtr($y); # leaves $z unchanged</pre>
+<pre>
+        # Dimensions must match
+        $z = AMIGA::Vector-&gt;new(1, 2, 3, 4);
+        print &quot;x + z&quot;, $x + $z, &quot;\n&quot;; # Causes an error!</pre>
+<pre>
+        # Vector operations
+        print $x-&gt;dot($y), &quot;\n&quot;; # prints -1
+        print $x-&gt;length(), &quot;\n&quot;; # prints 3.74165738677394
+        print sqrt($x-&gt;dot($x)), &quot;\n&quot;; # same as above
+        print &quot;dimension: &quot;, $x-&gt;dim(), &quot;\n&quot;; # prints 3</pre>
+<pre>
+        # The components can be retrieved as an array if needed
+        my @components = $x-&gt;to_array();</pre>
+<p>
+</p>
+<hr />
+<h1><a name="initialisation">INITIALISATION</a></h1>
+<dl>
+<dt><strong><a name="item_new">new ( COMPONENTS )</a></strong><br />
+</dt>
+<dd>
+This is a constructor for a new AMIGA::Vector object. <code>COMPONENTS</code> should
+be an array of the component values of the vector.
+</dd>
+<p></p></dl>
+<p>
+</p>
+<hr />
+<h1><a name="methods">METHODS</a></h1>
+<p>
+</p>
+<h2><a name="copy____">copy ( )</a></h2>
+<p>Returns a copy of this vector.</p>
+<p>Arguments: -</p>
+<p>Return value: Copy of the vector for which this method was invoked.</p>
+<p>
+</p>
+<h2><a name="mult___real__">mult ( REAL )</a></h2>
+<p>Multiplies this vector with the given scalar <code>REAL</code>.
+Note: Changes the vector for which the method was invoked.</p>
+<p>Arguments: <code>REAL</code> -- a scalar value.</p>
+<p>Return value: The resulting vector.</p>
+<p>
+</p>
+<h2><a name="add___vector__">add ( VECTOR )</a></h2>
+<p>Adds the vector <code>VECTOR</code> to this vector, and then returns it.
+Note: Changes the vector for which the method was invoked.</p>
+<p>Arguments: <code>VECTOR</code> -- an <code>AMIGA::Vector</code> object.</p>
+<p>Return value: The resulting vector.</p>
+<p>
+</p>
+<h2><a name="subtr___vector__">subtr ( VECTOR )</a></h2>
+<p>Subtracts the vector <code>VECTOR</code> from this vector, and then returns it.
+Note: Changes the vector for which the method was invoked.</p>
+<p>Arguments: <code>VECTOR</code> -- an <code>AMIGA::Vector</code> object.</p>
+<p>Return value: The resulting vector.</p>
+<p>
+</p>
+<h2><a name="neg____">neg ( )</a></h2>
+<p>Changes sign of every component of this vector, and also returns it.
+Note: Changes the vector for which the method was invoked.</p>
+<p>Arguments: -</p>
+<p>Return value: The resulting vector.</p>
+<p>
+</p>
+<h2><a name="dot___vector__">dot ( VECTOR )</a></h2>
+<p>Calculates the dot product between this vector and the vector
+<code>VECTOR</code> given as argument.</p>
+<p>Arguments: <code>VECTOR</code> -- an <code>AMIGA::Vector</code> object.</p>
+<p>Return value: Dot product of the two vectors.</p>
+<p>
+</p>
+<h2><a name="length____">length ( )</a></h2>
+<p>Calculates the length of this vector and returns it.</p>
+<p>Arguments: -</p>
+<p>Return value: Length of the vector.</p>
+<p>
+</p>
+<h2><a name="to_str____">to_str ( )</a></h2>
+<p>Renders the vector into a Perl string. This is done by printing the component
+values sequentially separated by whitespace inside enclosing square brackets.
+Thus a vector with components <code>2.1, 3.2, 4.3</code> renders into <code>[2.1 3.2 4.3]</code>.</p>
+<p>Arguments: -</p>
+<p>Return value: Vector string representation.</p>
+<p>
+</p>
+<h2><a name="dim____">dim ( )</a></h2>
+<p>Returns the dimension of the vector.</p>
+<p>Arguments: -</p>
+<p>Return value: Dimension of the vector.</p>
+<p>
+</p>
+<h2><a name="to_array____">to_array ( )</a></h2>
+<p>Returns the components of the vector as a Perl array.</p>
+<p>Arguments: -</p>
+<p>Return value: Vector components as an array.</p>
+<p>
+</p>
+<hr />
+<h1><a name="author">AUTHOR</a></h1>
+<p>Written in 2006 for the benefit of Tuorla Observatory Cosmological Simulations
+research group by Pauli Pihajoki.</p>
+<p>
+</p>
+<hr />
+<h1><a name="copyright">COPYRIGHT</a></h1>
+<p>Copyright (c) 2006 Pauli Pihajoki. All rights reserved. This program is
+free software; you can redistribute it and/or modify it under the same terms
+as Perl itself.</p>
+
+</body>
+
+</html>

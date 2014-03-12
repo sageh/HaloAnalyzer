@@ -1,0 +1,204 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>AMIGA::Statistics - Simple object oriented statistics module for handling 2D
+data formats.</title>
+<link rev="made" href="mailto:feedback@suse.de" />
+</head>
+
+<body style="background-color: white">
+
+<p><a name="__index__"></a></p>
+<!-- INDEX BEGIN -->
+
+<ul>
+
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#initialisation">INITIALISATION</a></li>
+	<li><a href="#methods">METHODS</a></li>
+	<ul>
+
+		<li><a href="#rows____">rows ( )</a></li>
+		<li><a href="#cols____">cols ( )</a></li>
+		<li><a href="#map_to_columns___op____column____column___________">map_to_columns ( OP [, COLUMN [, COLUMN [,...]]] )</a></li>
+		<li><a href="#map_to_rows___op____row____row___________">map_to_rows ( OP [, ROW [, ROW [,...]]] )</a></li>
+	</ul>
+
+	<li><a href="#utility_functions">UTILITY FUNCTIONS</a></li>
+	<ul>
+
+		<li><a href="#mean___values__">mean ( VALUES )</a></li>
+		<li><a href="#median___values__">median ( VALUES )</a></li>
+		<li><a href="#variance___values__">variance ( VALUES )</a></li>
+		<li><a href="#std_deviation___values__">std_deviation ( VALUES )</a></li>
+	</ul>
+
+	<li><a href="#author">AUTHOR</a></li>
+	<li><a href="#copyright">COPYRIGHT</a></li>
+</ul>
+<!-- INDEX END -->
+
+<hr />
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
+<p>AMIGA::Statistics - Simple object oriented statistics module for handling 2D
+data formats.</p>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<pre>
+        use AMIGA::Statistics;</pre>
+<pre>
+        my $stat = AMIGA::Statistics-&gt;new(\@some_2d_data);</pre>
+<pre>
+        # Find out number of rows and columns
+        my $num_rows = $stat-&gt;rows();
+        my $num_cols = $stat-&gt;cols();</pre>
+<pre>
+        # Access basic statistics functions on a per-column basis
+        my @column_means = $stat-&gt;map_to_columns(\&amp;mean);
+        my @column_medians = $stat-&gt;map_to_columns(\&amp;median);
+        my @col_variances = $stat-&gt;map_to_columns(\&amp;variance);
+        my @col_std_devs = $stat-&gt;map_to_columns(\&amp;std_deviation);</pre>
+<pre>
+        # Or just for some columns
+        my @col_0_1_means = $stat-&gt;map_to_columns(\&amp;mean, 0, 1);</pre>
+<pre>
+        # Same things can be done for rows
+        my @row_means = $stat-&gt;map_to_rows(\&amp;mean);
+        my @row_0_1_means = $stat-&gt;map_to_rows(\&amp;mean, 0, 1);</pre>
+<pre>
+        # Apply arbitrary operations on a per-column or per-row basis
+        my $sum_of_args = sub { 
+                my $ret=0; 
+                for (@_) {
+                        $ret += $_;
+                } 
+                return $ret; 
+        };
+        my @column_sums = $stat-&gt;map_to_column($sum_of_args);
+        my @row_sums = $stat-&gt;map_to_rows($sum_of_args);</pre>
+<pre>
+        # Apply some arbitrary operation between different columns on 
+        # a row by row basis and collect the results
+        my @division_of_col_3_with_col_4 = 
+                        $stat-&gt;map_to_rows( { $_[3] / $_[4]; } );</pre>
+<p>
+</p>
+<hr />
+<h1><a name="initialisation">INITIALISATION</a></h1>
+<dl>
+<dt><strong><a name="item_new">new ( DATA )</a></strong><br />
+</dt>
+<dd>
+This is a constructor for a new AMIGA::Statistics object. <code>DATA</code> is
+a 2D array (with uniform amount of columns on each row).
+</dd>
+<dd>
+<p>The constructor does some primitive validation on the data, and creates
+a column-based view on the data.</p>
+</dd>
+<p></p></dl>
+<p>
+</p>
+<hr />
+<h1><a name="methods">METHODS</a></h1>
+<p>
+</p>
+<h2><a name="rows____">rows ( )</a></h2>
+<p>Returns the number of rows in the data.</p>
+<p>Arguments: -</p>
+<p>Return value: Number of rows in the data.</p>
+<p>
+</p>
+<h2><a name="cols____">cols ( )</a></h2>
+<p>Returns the number of columns in the data.</p>
+<p>Arguments: -</p>
+<p>Return value: Number of columns in the data.</p>
+<p>
+</p>
+<h2><a name="map_to_columns___op____column____column___________">map_to_columns ( OP [, COLUMN [, COLUMN [,...]]] )</a></h2>
+<p>Maps some operation <code>OP</code> to every element in given columns, or all columns
+if none are specified. The results are gathered in a list and returned.</p>
+<p>Arguments:</p>
+<ul>
+<li></li>
+<code>OP</code> -- A subroutine reference. The subroutine should expect to have an 
+array of all the elements of a single column passed as an argument. These
+will be in the same order as in the original data, with topmost in 
+<code>$_[0]</code>. The return value of the subroutine will be stored in the result
+array.
+<p></p>
+<li></li>
+<code>COLUMN</code> -- A number specifying the column index. Indexing starts from 0.
+<p></p></ul>
+<p>Return value: A list of the results of all the evaluations of <code>OP</code>. These
+results are in the same order as the given column indexes or in the same
+order (left to right) as in the original data, if no columns were specified.</p>
+<p>
+</p>
+<h2><a name="map_to_rows___op____row____row___________">map_to_rows ( OP [, ROW [, ROW [,...]]] )</a></h2>
+<p>Maps some operation <code>OP</code> to every element in given rows, or all rows 
+if none are specified. The results are gathered in a list and returned.</p>
+<p>Arguments:</p>
+<ul>
+<li></li>
+<code>OP</code> -- A subroutine reference. The subroutine should expect to have an 
+array of all the elements of a single row passed as an argument. These
+will be in the same order as in the original data, with leftmost in 
+<code>$_[0]</code>. The return value of the subroutine will be stored in the result
+array.
+<p></p>
+<li></li>
+<code>COLUMN</code> -- A number specifying the column index. Indexing starts from 0.
+<p></p></ul>
+<p>Return value: A list of the results of all the evaluations of <code>OP</code>. These
+results are in the same order as the given row indexes, or in the same
+order as in the original data, if no rows were specified.</p>
+<p>
+</p>
+<hr />
+<h1><a name="utility_functions">UTILITY FUNCTIONS</a></h1>
+<p>These take input data as an array of values (<code>VALUES</code>) and return the result
+of the corresponding statistical operation on that data. All summing is
+done by sorting to ascending order and using the compensating Kahan summation
+algorithm to try to minimise summation errors.</p>
+<p>These can be mapped to columns or rows as described in <a href="#synopsis">SYNOPSIS</a>.</p>
+<p>
+</p>
+<h2><a name="mean___values__">mean ( VALUES )</a></h2>
+<p>Calculates the mean of <code>VALUES</code>.</p>
+<p>
+</p>
+<h2><a name="median___values__">median ( VALUES )</a></h2>
+<p>Calculates the median of <code>VALUES</code>.</p>
+<p>
+</p>
+<h2><a name="variance___values__">variance ( VALUES )</a></h2>
+<p>Calculates the variance of <code>VALUES</code>. Note: The denominator is taken as <code>N</code>,
+and not <code>N-1</code> so this is not the unbiased sample variance.</p>
+<p>
+</p>
+<h2><a name="std_deviation___values__">std_deviation ( VALUES )</a></h2>
+<p>Calculates the standard deviation of <code>VALUES</code>. Note: The denominator is taken
+as <code>N</code>, and not <code>N-1</code> so this is not the unbiased sample standard deviation.</p>
+<p>
+</p>
+<hr />
+<h1><a name="author">AUTHOR</a></h1>
+<p>Written in 2006 for the benefit of Tuorla Observatory Cosmological Simulations
+research group by Pauli Pihajoki.</p>
+<p>
+</p>
+<hr />
+<h1><a name="copyright">COPYRIGHT</a></h1>
+<p>Copyright (c) 2006 Pauli Pihajoki. All rights reserved. This program is
+free software; you can redistribute it and/or modify it under the same terms
+as Perl itself.</p>
+
+</body>
+
+</html>

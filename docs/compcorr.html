@@ -1,0 +1,141 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>compcorr.c -- A program for calculating values of several different
+correlation function estimators separately for both transverse and parallel
+components as seen from origin using given data and random samples.</title>
+<link rev="made" href="mailto:feedback@suse.de" />
+</head>
+
+<body style="background-color: white">
+
+<p><a name="__index__"></a></p>
+<!-- INDEX BEGIN -->
+
+<ul>
+
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#arguments">ARGUMENTS</a></li>
+	<li><a href="#file_formats">FILE FORMATS</a></li>
+	<ul>
+
+		<li><a href="#random_sample">RANDOM SAMPLE</a></li>
+		<li><a href="#data_file">DATA FILE</a></li>
+		<li><a href="#output_file">OUTPUT FILE</a></li>
+	</ul>
+
+	<li><a href="#author">AUTHOR</a></li>
+	<li><a href="#copyright">COPYRIGHT</a></li>
+</ul>
+<!-- INDEX END -->
+
+<hr />
+<p>
+</p>
+<hr />
+<h1><a name="name">NAME</a></h1>
+<p>compcorr.c -- A program for calculating values of several different
+correlation function estimators separately for both transverse and parallel
+components as seen from origin using given data and random samples.</p>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<pre>
+        # Hamilton estimator
+        ./compcorr correlation.dat data.dat random_sample.dat 4</pre>
+<pre>
+        # Landy-Szalay estimator by default
+        ./compcorr correlation.dat data.dat random_sample.dat</pre>
+<p>
+</p>
+<hr />
+<h1><a name="arguments">ARGUMENTS</a></h1>
+<p>The following arguments must be given, in this order: <code>OUT</code> <code>DATA</code> <code>CMP</code>.
+In addition, <code>METHOD</code> can be given.</p>
+<ul>
+<li></li>
+<code>OUT</code> -- Filename where the calculated data should be stored.
+<p></p>
+<li></li>
+<code>DATA</code> -- Filename where to search for the data for which the correlation
+function estimator should be calculated for.
+<p></p>
+<li></li>
+<code>CMP</code> -- Filename where to search for the binomial random field to use in
+the Monte Carlo calculation.
+<p></p>
+<li></li>
+<code>METHOD</code> -- <em>Optional.</em> Which correlation estimator to use. Valid choices
+are:
+<ul>
+<li></li>
+1 =&gt; Peebles-Hauser (1974) estimator.
+<p></p>
+<li></li>
+2 =&gt; Davis-Peebles (1983) estimator.
+<p></p>
+<li></li>
+3 =&gt; Hamilton (1993) estimator.
+<p></p>
+<li></li>
+4 =&gt; Landy-Szalay (1993) estimator.
+<p></p></ul>
+</ul>
+<p>
+</p>
+<hr />
+<h1><a name="file_formats">FILE FORMATS</a></h1>
+<p>All the files are to be in ASCII format, with numerical fields separated
+by whitespaces and newlines for human readability.</p>
+<p>
+</p>
+<h2><a name="random_sample">RANDOM SAMPLE</a></h2>
+<p>The random sample file should have the following format:</p>
+<pre>
+        number of points (N)
+        data low bound (3 components, separated by whitespace)
+        data high bound (3 components, separated by whitespace)
+        point 1 (3 components, separated by whitespace)
+        .
+        .
+        .
+        point N (3 components, separated by whitespace)</pre>
+<p>
+</p>
+<h2><a name="data_file">DATA FILE</a></h2>
+<p>The data file should have a format otherwise identical to the random sample
+file, except that the following rows should be added to the very beginning of
+the file:</p>
+<pre>
+        number of parallel scale bins (N_p)
+        bin 1 (2 components, low and high bounds, whitespace separated)
+        .
+        .
+        bin N_p 
+        number of transverse scale bins (N_t)
+        bin 1 (2 components, low and high bounds, whitespace separated)
+        .
+        .
+        bin N_t</pre>
+<p>
+</p>
+<h2><a name="output_file">OUTPUT FILE</a></h2>
+<p>Result in OUTFILE will have one row for each bin, with the following
+columns in this order: bin low bound, high bound, value of ksi, Poisson error</p>
+<p>
+</p>
+<hr />
+<h1><a name="author">AUTHOR</a></h1>
+<p>Written in 2006 for the benefit of Tuorla Observatory Cosmological Simulations
+research group by Pauli Pihajoki.</p>
+<p>
+</p>
+<hr />
+<h1><a name="copyright">COPYRIGHT</a></h1>
+<p>Copyright (c) 2006 Pauli Pihajoki. All rights reserved.</p>
+
+</body>
+
+</html>

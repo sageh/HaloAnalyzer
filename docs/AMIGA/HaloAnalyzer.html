@@ -1,0 +1,1143 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>AMIGA::HaloAnalyzer - AMIGA data analysis package</title>
+<link rev="made" href="mailto:feedback@suse.de" />
+</head>
+
+<body style="background-color: white">
+
+<p><a name="__index__"></a></p>
+<!-- INDEX BEGIN -->
+
+<ul>
+
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#description">DESCRIPTION</a></li>
+	<li><a href="#initialisation">INITIALISATION</a></li>
+	<ul>
+
+		<li><a href="#accessors">ACCESSORS</a></li>
+	</ul>
+
+	<li><a href="#attributes">ATTRIBUTES</a></li>
+	<li><a href="#methods">METHODS</a></li>
+	<ul>
+
+		<li><a href="#create_mergertree_input____">create_mergertree_input ( )</a></li>
+		<li><a href="#create_halohistory_input___halos__">create_halohistory_input ( HALOS )</a></li>
+		<li><a href="#run_halohistory___halos__">run_halohistory ( HALOS )</a></li>
+		<li><a href="#find_z_values____">find_z_values ( )</a></li>
+		<li><a href="#get_time_data____">get_time_data ( )</a></li>
+		<li><a href="#get_all_halodata___redshift__">get_all_halodata ( REDSHIFT )</a></li>
+		<li><a href="#track_halos___halos__">track_halos ( HALOS )</a></li>
+		<li><a href="#halohistory___halo_hash___halos__">halohistory ( HALO_HASH | HALOS )</a></li>
+		<li><a href="#get_mass_evolution___halos__">get_mass_evolution ( HALOS )</a></li>
+		<li><a href="#get_all_subhalo_data___redshift__">get_all_subhalo_data ( REDSHIFT )</a></li>
+		<li><a href="#modify_halodump___halodump__">modify_halodump ( HALODUMP )</a></li>
+		<li><a href="#find_age___halohistory__">find_age ( HALOHISTORY )</a></li>
+		<li><a href="#formation_time_histogram___mod_halodump____bin____bin___________">formation_time_histogram ( MOD_HALODUMP [, BIN [, BIN, [...]]] )</a></li>
+		<li><a href="#shared_particles___redshift__">shared_particles ( REDSHIFT )</a></li>
+		<li><a href="#merger_tree___criterion__halos__">merger_tree ( CRITERION, HALOS )</a></li>
+		<li><a href="#correlation___args__">correlation ( ARGS )</a></li>
+		<li><a href="#z_to_gyr___redshift__">z_to_gyr ( REDSHIFT )</a></li>
+		<li><a href="#realspace_to_z_space___halodata__point__">realspace_to_z_space ( HALODATA, POINT )</a></li>
+	</ul>
+
+	<li><a href="#utility_functions">UTILITY FUNCTIONS</a></li>
+	<ul>
+
+		<li><a href="#parse_datafile___file__">parse_datafile ( FILE )</a></li>
+		<li><a href="#get_mass_interval___halodata__low__high__">get_mass_interval ( HALODATA, LOW, HIGH )</a></li>
+		<li><a href="#get_parameter_interval___halodata__index__low__high__">get_parameter_interval ( HALODATA, INDEX, LOW, HIGH )</a></li>
+	</ul>
+
+	<li><a href="#notes">NOTES</a></li>
+	<ul>
+
+		<li><a href="#redshifts">REDSHIFTS</a></li>
+		<li><a href="#data_representation">DATA REPRESENTATION</a></li>
+	</ul>
+
+	<li><a href="#author">AUTHOR</a></li>
+	<li><a href="#copyright">COPYRIGHT</a></li>
+</ul>
+<!-- INDEX END -->
+
+<hr />
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
+<p>AMIGA::HaloAnalyzer - AMIGA data analysis package</p>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<pre>
+        use AMIGA::HaloAnalyzer;</pre>
+<pre>
+        # Or if we want to use the non-OO functions.
+        use AMIGA::HaloAnalyzer qw(parse_datafile 
+                                   get_mass_interval
+                                   get_parameter_interval);</pre>
+<pre>
+        # Initialisation
+        my $analyzer = AMIGA::HaloAnalyzer-&gt;new(
+                # Set paths for external files
+                data_path =&gt; &quot;path/to/data/&quot;, 
+                binary_path =&gt; &quot;path/to/HaloHistory/and/other/binaries&quot;, 
+                # Set the physical parameters of the data (default 
+                # values shown)
+                box_size =&gt; 10,
+                formation_criterion =&gt; 0.50,
+                hubble_constant =&gt; 0.7,
+                # Print additional information about executed processes
+                verbose =&gt; 1);</pre>
+<pre>
+        # Create a string suitable for giving as input to the AMIGA 
+        # MergerTree program, and use it to run MergerTree.
+        my $input = $analyzer-&gt;create_mergertree_input();
+        system(&quot;MergerTree &lt; $input &gt; output_file&quot;);</pre>
+<pre>
+        # Create strings suitable for inputting to the AMIGA 
+        # HaloHistory binary. Generating one string per given 
+        # halo index.
+        my @input = $analyzer-&gt;create_halohistory_input(@halo_indexes);</pre>
+<pre>
+        # Directly run AMIGA HaloHistory program for the given halos.
+        $analyzer-&gt;run_halohistory(@halo_indexes);</pre>
+<pre>
+        # Get the contents of a _halos file for a given redshift 
+        # as a perl 2D array. The redshift values are best obtained 
+        # from the internal z_values array.
+        my @halodata = $analyzer-&gt;get_all_halodata(
+                $analyzer-&gt;{z_values}-&gt;[0]);
+        print &quot;Data for redshift = &quot;,$analyzer-&gt;{z_values}-&gt;[0],&quot;\n&quot;;
+        for (my $i=0; $i &lt; @halodata; $i++) {
+                print &quot;Mass of halo no. $i is $halodata-&gt;[$i][8]\n&quot;;
+        }</pre>
+<pre>
+        # Tracing the changes in halo index number across 
+        # redshifts starting from z = 0.
+        my %halotrace = $analyzer-&gt;trace_halos(@halo_indexes);
+        foreach my $halo (keys %halotrace) {
+                print &quot;Backtrace of halo $halo across redshifts:\n&quot;;
+                foreach my $row (@{$halotrace{$halo}}) {
+                        print &quot;Redshift $row-&gt;[0], index $row-&gt;[1]\n&quot;;
+                }
+        }</pre>
+<pre>
+        # Retrieving halo history data for given halos.
+        my %halohistory = $analyzer-&gt;halohistory(@halo_indexes);
+        foreach my $halo (keys %halohistory) {
+                print &quot;Halo history of halo $halo by &quot;,
+                &quot;ascending redshift:\n&quot;;
+                foreach my $row (@{$halohistory{$halo}}) {
+                        print join(&quot; &quot;, @$row), &quot;\n&quot;;
+                }
+        }</pre>
+<pre>
+        # Get data for the mass evolution of halos as a function 
+        # of time.
+        my %mass_evolution = $analyzer-&gt;get_mass_evolution(
+                @halo_indexes);
+        foreach my $halo (keys %mass_evolution) {
+                print &quot;Mass evolution of halo $halo\n&quot;;
+                print &quot;Fields:\n&quot;;
+                print &quot;redshift, time (Gyr), M, dz, &quot;,
+                &quot;dt (Gyr), dM, dM/dz, dM/dt&quot;;
+                foreach my $row (@{$mass_evolution{$halo}}) {
+                        print join(&quot; &quot;, @$row), &quot;\n&quot;;
+                }
+        }</pre>
+<pre>
+        # Parse a halodump_with_subhalos file and add the 
+        # formation time column,and halo data columns corresponding 
+        # to formation time to it.
+        my @halodump = &amp;parse_datafile(
+                &quot;halodump_with_subhalos_file&quot;);
+        my @modified_halodump = $analyzer-&gt;modify_halodump(\@halodump);</pre>
+<pre>
+        # Find out the formation time of a halo by its halohistory,
+        # and return the formation redshift and the halo data for
+        # that redshift as an array.
+        my %halohistory = $analyzer-&gt;halohistory(@halo_indexes);
+        foreach my $halo (%halohistory) {
+                my @data = $analyzer-&gt;find_age($halohistory{$halo});
+                print &quot;Halo no. $halo formed at redshift $data[0]\n&quot;;
+        }</pre>
+<pre>
+        # Retrieve a mass binned formation time histogram for all
+        # the mainhalos in given halodump data.
+        my @halodump = &amp;parse_datafile(&quot;halodump_file&quot;);
+        my @modified_dump = $analyzer-&gt;modify_halodump(\@halodump);
+        my @histogram = formation_time_histogram(\@halodump, 
+                [1.0e9, 1.0e10], [1.0e10, 1.0e11], [1.0e11, 1.0e12]);
+        foreach my $bin (@histogram) {
+                print &quot;Bin with lower bound $bin-&gt;[0] and &quot;,
+                &quot;upper bound $bin-&gt;[1] has $bin-&gt;[2] halos.\n&quot;;
+                print &quot;These are divided between redshifts as &quot;, 
+                &quot;follows:\n&quot;;
+                foreach my $redshift (keys %{$bin-&gt;[3]}) {
+                        print &quot;$bin-&gt;[3]-&gt;{$redshift} halos &quot;,
+                        &quot;formed at redshift&quot;,
+                        $redshift, &quot;\n&quot;;
+                }
+        }</pre>
+<pre>
+        # For some redshift z_i, find out how the halos at z_i and
+        # z_i+1 share their particles, by using the _mtree files.
+        my %sharing = $analyzer-&gt;shared_particles(
+                $analyzer-&gt;{z_values}-&gt;[0]);
+        foreach my $halo (keys %sharing) {
+                print &quot;Halo $halo at redshift &quot;, 
+                $analyzer-&gt;{z_values}-&gt;[0],
+                &quot;has $sharing{$halo}-&gt;[0] particles in total.\n&quot;;
+                print &quot;When compared to halos at redshift &quot;,
+                $analyzer-&gt;{z_values}-&gt;[1], &quot; the common particles are &quot;,
+                &quot;divided as follows:\n&quot;;
+                foreach my $contributor (keys %{$sharing{$halo}-&gt;[1]}) {
+                        print join(&quot; &quot;, 
+                                @{$sharing{$halo}-&gt;[1]-&gt;{$contributor}}), 
+                                &quot;\n&quot;;
+                }
+        }</pre>
+<pre>
+        # Construct a merger tree structure for each given halo, by
+        # applying the given progenitor criterion to the particle
+        # sharing data.
+        # The criterion is: 
+        # - minimum fraction of common particles between progenitor
+        #   and offspring, 
+        # - minimum fraction of progenitor particles
+        #   common with halos that must also be common with the
+        #   offspring, 
+        # - minimum progenitor mass
+        my %merger_trees = $analyzer-&gt;merger_tree([0.5, 0.7, 1.0e10], 
+                @halo_indexes);
+        foreach my $tree (keys %merger_trees) {
+                print &quot;We have constructed a merger tree &quot;,
+                &quot;for halo $tree\n&quot;;
+                # Convert the tree from single linked (one way) to double
+                # linked (two-way), so that one can traverse into both
+                # directions from a node.
+                $merger_trees{$tree}-&gt;double_link();
+                # Get a by-level accessor to the tree
+                my @view_by_level = $merger_trees{$tree}-&gt;level_view();
+        }</pre>
+<p>
+</p>
+<hr />
+<h1><a name="description">DESCRIPTION</a></h1>
+<p><code>AMIGA::HaloAnalyzer</code> is a package for performing various data analysis tasks
+on a set of AMIGA halo finder data. These include constructing merger trees
+for individual halos, calculating formation times etc.</p>
+<p>The HaloAnalyzer package uses the _halos, _mtree and _mtree_idx files from
+the data directory to do it's work. The AMIGA MergerTree program should thus
+have been run on the data beforehand to generate these files.</p>
+<p>
+</p>
+<hr />
+<h1><a name="initialisation">INITIALISATION</a></h1>
+<dl>
+<dt><strong><a name="item_new">new ( OPTIONS )</a></strong><br />
+</dt>
+<dd>
+This is the constructor for a new AMIGA::HaloAnalyzer object. <code>OPTIONS</code> is
+a hash containing the configuration options as key-value pairs. Valid
+keys with default values indicated are:
+</dd>
+<dl>
+<dt><strong><a name="item_data_path">data_path</a></strong><br />
+</dt>
+<dd>
+The path where the halo finder data files (_halos, _mtree,
+_mtree_idx, etc.) can be found.
+</dd>
+<dd>
+<p>Default: Current directory (where the calling script was ran from).</p>
+</dd>
+<p></p>
+<dt><strong><a name="item_binary_path">binary_path</a></strong><br />
+</dt>
+<dd>
+The path where the library searches for useful binaries,
+such as HaloHistory and external correlator programs.
+</dd>
+<dd>
+<p>Default: Current directory (where the calling script was ran from).</p>
+</dd>
+<p></p>
+<dt><strong><a name="item_halohistory_binary">halohistory_binary</a></strong><br />
+</dt>
+<dd>
+The name of the AMIGA HaloHistory program.
+</dd>
+<dd>
+<p>Default: <code>HaloHistory</code></p>
+</dd>
+<p></p>
+<dt><strong><a name="item_correlator_binary">correlator_binary</a></strong><br />
+</dt>
+<dd>
+Name of the external two-point correlator program.
+</dd>
+<dd>
+<p>Default: <code>correlator</code></p>
+</dd>
+<p></p>
+<dt><strong><a name="item_component_correlator_binary">component_correlator_binary</a></strong><br />
+</dt>
+<dd>
+Name of the external parallel/transverse two-point correlator program.
+</dd>
+<dd>
+<p>Default: <code>compcorr</code></p>
+</dd>
+<p></p>
+<dt><strong><a name="item_redshift_wildcard">redshift_wildcard</a></strong><br />
+</dt>
+<dd>
+Wildcard used in filenames for redshift values.
+</dd>
+<dd>
+<p>Default: <code>%z</code></p>
+</dd>
+<p></p>
+<dt><strong><a name="item_haloindex_wildcard">haloindex_wildcard</a></strong><br />
+</dt>
+<dd>
+Wildcard used in filenames for halo indexes.
+</dd>
+<dd>
+<p>Default: <code>%i</code></p>
+</dd>
+<p></p>
+<dt><strong><a name="item_simufile_template">simufile_template</a></strong><br />
+</dt>
+<dd>
+Template for data file names (_halos, etc.)
+</dd>
+<dd>
+<p>Default: <code>SIMU.z%z.AHF</code></p>
+</dd>
+<p></p>
+<dt><strong><a name="item_halohistory_output_template">halohistory_output_template</a></strong><br />
+</dt>
+<dd>
+Template for halo history files.
+</dd>
+<dd>
+<p>Default: <code>output_from_HaloHistory_%i.dat</code></p>
+</dd>
+<p></p>
+<dt><strong><a name="item_halohistory_input_template">halohistory_input_template</a></strong><br />
+</dt>
+<dd>
+Template for input files for the AMIGA
+HaloHistory program. The template should conform with the requirements
+for <code>mktemp</code> C standard library function. See <em>mktemp(3)</em> or 
+<a href="..//File/Temp.html">the File::Temp manpage</a> for reference.
+</dd>
+<dd>
+<p>Default: <code>halohistory_input_XXXXX</code></p>
+</dd>
+<p></p>
+<dt><strong><a name="item_simu_logfile">simu_logfile</a></strong><br />
+</dt>
+<dd>
+Name of the AMIGA simulation log.
+</dd>
+<dd>
+<p>Default: <code>SIMU.log</code></p>
+</dd>
+<p></p>
+<dt><strong><a name="item_simu_dumpfile">simu_dumpfile</a></strong><br />
+</dt>
+<dd>
+Name of the halodump_halos_with_subhalos file. From now
+on this file will be referred to as a <em>halodump file</em>.
+</dd>
+<dd>
+<p>Default: <code>SIMU.z0.000.AHF.halodump_halos_with_subhalos.dat</code></p>
+</dd>
+<p></p>
+<dt><strong><a name="item_halodump_columns">halodump_columns</a></strong><br />
+</dt>
+<dd>
+Number of columns in an unaltered halodump file.
+</dd>
+<dd>
+<p>Default: 74</p>
+</dd>
+<p></p>
+<dt><strong><a name="item_modified_halodump_columns">modified_halodump_columns</a></strong><br />
+</dt>
+<dd>
+Number of columns in a halodump file in which
+formation time column and the corresponding data columns have been added.
+</dd>
+<dd>
+<p>Default: 140</p>
+</dd>
+<p></p>
+<dt><strong><a name="item_box_size">box_size</a></strong><br />
+</dt>
+<dd>
+Size of the simulation box used for the data set.
+</dd>
+<dd>
+<p>Default: 10</p>
+</dd>
+<p></p>
+<dt><strong><a name="item_formation_criterion">formation_criterion</a></strong><br />
+</dt>
+<dd>
+The fraction of the <code>z = 0</code> mass of halo that is
+considered to be its initial mass. I.e. when tracking a halo backwards
+across the redshifts, its formation time is calculated as being at the redshift
+when the mass of the halo falls below this parameter.
+</dd>
+<dd>
+<p>Default: 0.5</p>
+</dd>
+<p></p>
+<dt><strong><a name="item_hubble_constant">hubble_constant</a></strong><br />
+</dt>
+<dd>
+Value of the normalized Hubble constant 
+<code>h = H/100 km/s/pc</code>.
+</dd>
+<dd>
+<p>Default: 0.7</p>
+</dd>
+<p></p>
+<dt><strong><a name="item_verbose">verbose</a></strong><br />
+</dt>
+<dd>
+Controls the verbosity level of the module. Currently only two values are
+supported. Value 1 causes the module to output some information of the ongoing
+processes to standard output, while value 0 suppresses most output.
+</dd>
+<dd>
+<p>Default: 0</p>
+</dd>
+<p></p></dl>
+</dl>
+<p>
+</p>
+<h2><a name="accessors">ACCESSORS</a></h2>
+<p>After creating an instance of the <code>HaloAnalyzer</code> class, the configuration
+options can be retrieved and changed using accessors. Each option has an
+accessor of the same name that sets the option to the first argument and
+returns the value set, or returns the current value if no arguments are
+given.</p>
+<pre>
+        # As default, the instance is created as non-verbose
+        my $analyzer = AMIGA::HaloAnalyzer-&gt;new();
+        print $analyzer-&gt;verbose(), &quot;\n&quot;; # Prints 0
+        # Set new value.
+        $analyzer-&gt;verbose(1);
+        print $analyzer-&gt;verbose(), &quot;\n&quot;; # Prints 1
+        # Set new value and return the set value.
+        print $analyzer-&gt;verbose(0), &quot;\n&quot;; # Prints 0</pre>
+<p>
+</p>
+<hr />
+<h1><a name="attributes">ATTRIBUTES</a></h1>
+<p>Every configuration option listed at <a href="#item_new">new</a> is also an attribute
+of the <code>AMIGA::HaloAnalyzer</code> object. In addition, there are several other
+attributes with useful data that are derived runtime, after the object has
+been created. All of these attributes have accessors as detailed in 
+<a href="#accessors">ACCESSORS</a>.</p>
+<dl>
+<dt><strong><a name="item_z_values">z_values</a></strong><br />
+</dt>
+<dd>
+An array of all the redshift values that could be extracted from the files
+at <a href="#item_data_path">data_path</a> using <a href="#item_simufile_template">simufile_template</a> as reference. The module obtains
+it by calling the <a href="#find_z_values____">find_z_values</a> method. The values are
+stored in
+ascending order of numerical value.
+</dd>
+<dd>
+<p>Example content: <code>[&quot;0.000&quot;, &quot;0.100&quot;, &quot;0.149&quot;]</code></p>
+</dd>
+<p></p>
+<dt><strong><a name="item_z_a_t_relation">z_a_t_relation</a></strong><br />
+</dt>
+<dd>
+A 2D array of the correspondence between the redshift, scale parameter and
+time values (Gyr/h) of the simulation output times. These are extracted
+from the <a href="#item_simu_logfile">simu_logfile</a> and are used by the <a href="#z_to_gyr___redshift__">z_to_gyr</a> 
+method.
+</dd>
+<dd>
+<p>Example content:</p>
+</dd>
+<dd>
+<pre>
+        [[7.000, 0.125, 0.554],
+        [4.000, 0.200, 1.118],
+        [2.250, 0.308, 2.114],
+        [1.250, 0.444, 3.584],
+        [0.700, 0.588, 5.238],
+        [0.400, 0.714, 6.684],
+        [0.200, 0.833, 7.996],
+        [0.000, 1.000, 9.706]]</pre>
+</dd>
+<p></p></dl>
+<p>
+</p>
+<hr />
+<h1><a name="methods">METHODS</a></h1>
+<p>These are methods of an object, and called as <code>$object-</code>method()&gt;.</p>
+<p>
+</p>
+<h2><a name="create_mergertree_input____">create_mergertree_input ( )</a></h2>
+<p>Creates a string suitable for piping to the AMIGA MergerTree binary. The
+function looks at the files residing in <a href="#item_data_path">data_path</a> and by comparing them
+to the <a href="#item_simufile_template">simufile_template</a> creates an input string correct for this dataset.
+The filenames are stored in the string <em>with relative path</em>.</p>
+<p>Arguments: -</p>
+<p>Return value: A string value containing MergerTree input.</p>
+<p>Example of usage:</p>
+<pre>
+        # Construct input
+        my $input = $analyzer-&gt;create_merger_tree_input();</pre>
+<pre>
+        # Use it to run MergerTree program
+        system(&quot;MergerTree &lt; $input &gt; output_file&quot;);</pre>
+<p>
+</p>
+<h2><a name="create_halohistory_input___halos__">create_halohistory_input ( HALOS )</a></h2>
+<p>Creates strings suitable for piping to AMIGA HaloHistory binary. The function
+takes an array of halo indexes as an argument and constructs a corresponding
+array of input strings.</p>
+<p>Arguments: <code>HALOS</code> -- array of halo indexes.</p>
+<p>Return value: An array of HaloHistory input strings.</p>
+<p>Example of usage:</p>
+<pre>
+        # Construct input for some halos
+        my @input = $analyzer-&gt;create_halohistory_input(0..100);</pre>
+<pre>
+        # Use these to run HaloHistory program
+        for (my $i=0; $i &lt; @input; $i++) {
+                system(&quot;HaloHistory &lt; $input[$i] &gt; output_number_$i&quot;);
+        }</pre>
+<p>
+</p>
+<h2><a name="run_halohistory___halos__">run_halohistory ( HALOS )</a></h2>
+<p>Runs the AMIGA HaloHistory binary for each halo index in <code>HALOS</code> and stores
+the output according to <a href="#item_halohistory_output_template">halohistory_output_template</a>.</p>
+<p>Arguments: <code>HALOS</code> -- array of halo indexes.</p>
+<p>Return value: -</p>
+<p>Example of usage:</p>
+<pre>
+        # Run HaloHistory program for some halos, and check that
+        # the results got written
+        my @halos = (0..10);
+        $analyzer-&gt;run_halohistory(@halos);
+        foreach my $halo (@halos) {
+                my $filename = 
+                        $analyzer-&gt;halohistory_output_template();
+                my $wildcard = $analyzer-&gt;haloindex_wildcard();
+                $filename =~ s/$wildcard/$halo/g;
+                if (!(-e $filename)) {
+                        print &quot;File $filename wasn't created!\n&quot;;
+                }
+        }</pre>
+<p>
+</p>
+<h2><a name="find_z_values____">find_z_values ( )</a></h2>
+<p>Looks at the filenames in the dataset, and retrieves all the redshift values
+found by comparing with <a href="#item_simufile_template">simufile_template</a>.</p>
+<p>Arguments: -</p>
+<p>Return value: Array of redshift values.</p>
+<p>Example of usage:</p>
+<pre>
+        # Fetch the redshift values from simulation 
+        # data filenames
+        my @z_vals = $analyzer-&gt;find_z_values();
+        print &quot;Found redshifts: &quot;.join(&quot; &quot;, @z_vals).&quot;\n&quot;;</pre>
+<pre>
+        # However, these are more efficiently obtained from
+        # the object itself.
+        my @z_vals_2 = @{$analyzer-&gt;z_values()}; # These two are
+        my @z_vals_3 = @{$analyzer-&gt;{z_values}}; # the same thing!
+        # Or fetch just the reference
+        my $z_vals_ref = $analyzer-&gt;z_values();</pre>
+<pre>
+        # Print smallest value (sorted in ascending order)
+        print $z_vals_2[0], &quot;\n&quot;;
+        print $z_vals_ref-&gt;[0], &quot;\n&quot;; # By using the reference</pre>
+<p>
+</p>
+<h2><a name="get_time_data____">get_time_data ( )</a></h2>
+<p>Goes through <a href="#item_simu_logfile">simu_logfile</a> and tries to find the table relating the 
+simulation output redshifts to time and scale parameter values.</p>
+<p>Arguments: -</p>
+<p>Return value: 2D array with redshift, scale parameter and time columns.</p>
+<p>Example of usage:</p>
+<pre>
+        # Find the values from simulation logfile
+        my @data = $analyzer-&gt;get_time_data();</pre>
+<pre>
+        # But they are already fetched when the object was created
+        my @data2 = $analyzer-&gt;z_a_t_relation(); # more efficient!
+        # Print the values
+        print &quot;redshift , scale parameter, time (Gyr/h)\n&quot;;
+        foreach my $row (@data2) {
+                print join(&quot; &quot;, @$row), &quot;\n&quot;;
+        }</pre>
+<p>
+</p>
+<h2><a name="get_all_halodata___redshift__">get_all_halodata ( REDSHIFT )</a></h2>
+<p>Retrieves the data from a _halos file for the given redshift and parses it
+into a 2D array.</p>
+<p>Arguments: <code>REDSHIFT</code> -- a string value.</p>
+<p>Return value: 2D array with the columns corresponding to a _halos file.</p>
+<p>Example of usage:</p>
+<pre>
+        # Fetch the data for the smallest redshift (should be 0.000)
+        my $redshift = $analyzer-&gt;z_values()-&gt;[0]; # From reference
+        my @halodata = $analyzer-&gt;get_all_halodata($redshift);</pre>
+<pre>
+        # Print out just the number of particles for each halo
+        foreach my $row (@halodata) {
+                print $row-&gt;[0], &quot;\n&quot;;
+        }</pre>
+<p>
+</p>
+<h2><a name="track_halos___halos__">track_halos ( HALOS )</a></h2>
+<p>Uses MergerTree _mtree_idx files to track each halo in <code>HALOS</code> backwards
+through time. This is done in a similar manner as in the AMIGA HaloHistory
+binary.</p>
+<p>Arguments: <code>HALOS</code> -- array of halo indexes.</p>
+<p>Return value: A hash table with halo index keys pointing to 2D arrays. The
+arrays contain two columns: redshift and the corresponding halo index.</p>
+<p>Example of usage:</p>
+<pre>
+        # Track every halo that we have at z = 0.
+        my @halodata = $analyzer-&gt;get_all_halodata(
+                                $analyzer-&gt;z_values()-&gt;[0]);
+        # One row for each halo, so amount of rows == amount of halos
+        my $n = @halodata;
+        # Track every halo. Indexes run from 0, so need to subtract one
+        my %track = $analyzer-&gt;track_halos(0..($n-1));</pre>
+<pre>
+        # Print out the results
+        foreach my $halo (keys %track) {
+                print &quot;Track of halo no. $halo\n&quot;;
+                print &quot;redshift index\n&quot;;
+                foreach my $row (@{$track{$key}}) {
+                        print join(&quot; &quot;, @$row), &quot;\n&quot;;
+                }
+        }</pre>
+<p>
+</p>
+<h2><a name="halohistory___halo_hash___halos__">halohistory ( HALO_HASH | HALOS )</a></h2>
+<p>Tracks given haloes backwards through time, and retrieves their parameters
+at each simulation output redshift. The output is then saved to the directory
+<a href="#item_data_path">data_path</a> by using the template <a href="#item_halohistory_output_template">halohistory_output_template</a>. 
+The argument can either be either a hash
+table, or an array of halo indexes. If the <code>HALO_HASH</code> contains a key
+<strong>use_existing</strong> that points to a false value, then all output files are
+rewritten, otherwise existing files will be used.</p>
+<p>Arguments: <code>HALOS</code> -- array of halo indexes, <em>or</em> <code>HALO_HASH</code> -- a hash
+table with keys <strong>use_existing</strong> pointing to any true or false value, and
+<strong>halos</strong> pointing to an array reference of halo indexes.</p>
+<p>Return value: A hash table with halo indexes pointing to 2D arrays of halo
+history data.</p>
+<p>Example of usage:</p>
+<pre>
+        # Get halohistory data for some halos
+        my %hh = $analyzer-&gt;halohistory(2, 4, 5, 7);
+        # Or by overwriting existing files
+        my %hh2 = $analyzer-&gt;halohistory(
+                        use_existing =&gt; 0,
+                        halos =&gt; [2, 4, 5, 7]);</pre>
+<pre>
+        # Get halo history data for all halos at z = 0, and overwrite old
+        # halo history files. NOTE: This takes a relatively long time and
+        # is memory intensive! (order of several hundred MB for ~5000
+        # halos)
+        my $num_halos = scalar($analyzer-&gt;get_all_halodata(
+                                $analyzer-&gt;z_values()-&gt;[0]));
+        my %hh = $analyzer-&gt;halohistory(
+                        use_existing =&gt; 0,
+                        halos =&gt; [0..($num_halos-1)]);</pre>
+<p>
+</p>
+<h2><a name="get_mass_evolution___halos__">get_mass_evolution ( HALOS )</a></h2>
+<p>Calculates data for the mass evolution of each halo in <code>HALOS</code> 
+as a function of time.</p>
+<p>Arguments: <code>HALOS</code> -- an array of halo indexes.</p>
+<p>Return value: A hash table with halo indexes pointing to 2D arrays with
+columns: redshift, time (Gyr), M, dz, dt (Gyr), dM, dM/dz, dM/dt</p>
+<p>Example of usage:</p>
+<pre>
+        # Get mass evolution of the 10 most massive halos, 
+        # and print them
+        my %data = $analyzer-&gt;get_mass_evolution(0..9);
+        foreach my $halo (sort keys %data) {
+                print &quot;Mass evolution of halo no. $halo\n&quot;;
+                print &quot;z, t, M, dz, dt, dM, dM/dz, dM/dt\n&quot;;
+                foreach my $row (@{$data{$halo}}) {
+                        print join(&quot; &quot;, @$row), &quot;\n&quot;;
+                }
+        }</pre>
+<p>
+</p>
+<h2><a name="get_all_subhalo_data___redshift__">get_all_subhalo_data ( REDSHIFT )</a></h2>
+<p>Reads _substructure files for the <code>REDSHIFT</code> and returns a hash table
+with halo index keys pointing to arrays of subhalo indexes.</p>
+<p>Arguments: <code>REDSHIFT</code> -- a string value.</p>
+<p>Return value: Hash table with halo indexes pointing to array references
+containing indexes of that halos subhalos.</p>
+<p>Example of usage:</p>
+<pre>
+        # Fetch the data for the smallest redshift (should be 0.000)
+        my %shdata = $analyzer-&gt;get_all_halodata(
+                                $analyzer-&gt;z_values()-&gt;[0]);</pre>
+<pre>
+        # Print out just the number of subhalos for each halo, and make
+        # sure that the halos are listed in ascending order
+        foreach my $halo (sort {$a&lt;=&gt;$b} keys %shdata) {
+                print &quot;$halo &quot;,scalar(@{$shdata{$halo}}), &quot;\n&quot;;
+        }</pre>
+<p>
+</p>
+<h2><a name="modify_halodump___halodump__">modify_halodump ( HALODUMP )</a></h2>
+<p>Appends additional columns to
+a 2D array <em>reference</em> <code>HALODUMP</code> containing the data from 
+a <a href="#item_simu_dumpfile">simu_dumpfile</a>. The added columns in order are:</p>
+<ul>
+<li></li>
+Main halo formation redshift and halo data for that redshift.
+<p></p>
+<li></li>
+Subhalo formation redshift and halo data for that redshift.
+<p></p>
+<li></li>
+Redshift when the subhalo first became a subhalo.
+<p></p>
+<li></li>
+Redshift when the subhalo first became a subhalo of it's <code>z=0</code> main halo and
+halo data for that redshift.
+<p></p></ul>
+<p>Arguments: <code>HALODUMP</code> -- reference to a 2D array containing halodump data.</p>
+<p>Return value: 2D array containing the data from <code>HALODUMP</code> appended with
+formation redshift and corresponding _halos data columns.</p>
+<p>Example of usage:</p>
+<pre>
+        # Get the halodump
+        my @halodump = &amp;parse_datafile($analyzer-&gt;simu_dumpfile());
+        # Add columns
+        @halodump = $analyzer-&gt;modify_halodump([@halodump]);</pre>
+<p>
+</p>
+<h2><a name="find_age___halohistory__">find_age ( HALOHISTORY )</a></h2>
+<p>Uses halo history data <code>HALOHISTORY</code> and <a href="#item_formation_criterion">formation_criterion</a> parameter to
+find out the formation redshift and the corresponding _halos data.</p>
+<p>Arguments: <code>HALOHISTORY</code> -- reference to a 2D array containing output from
+the HaloHistory program or <code>halohistory</code> method.</p>
+<p>Return value: An array containing the formation redshift and the
+corresponding _halos data row.</p>
+<p>Example of usage:</p>
+<pre>
+        # Fetch halohistory for some halo, and find it's formation time
+        # and parameters
+        my $halo_id = 1337;
+        my %hh = $analyzer-&gt;halohistory($halo_id);
+        my @age_and_params = $analyzer-&gt;find_age($hh{$halo_id});
+        print &quot;Halo $halo_id formed at redshift $age_and_params[0]\n&quot;;</pre>
+<p>
+</p>
+<h2><a name="formation_time_histogram___mod_halodump____bin____bin___________">formation_time_histogram ( MOD_HALODUMP [, BIN [, BIN, [...]]] )</a></h2>
+<p>Calculates formation time histogram data for the given halodump data in
+<code>MOD_HALODUMP</code> that must have been processed by the <code>modify_halodump</code>
+method beforehand. The main halos are binned in the given mass bins, and
+a separate histogram dataset is calculated for each bin.</p>
+<p>Arguments:</p>
+<ul>
+<li></li>
+<code>MOD_HALODUMP</code> -- reference to a 2D array containing halodump data
+modified with the <code>modify_halodump</code> method.
+<p></p>
+<li></li>
+<code>BIN</code> -- array references to a pair of value specifying the bin lower
+and upper bounds.
+<p></p></ul>
+<p>Return value: An array containing array references for each bin. These point
+to arrays containing:</p>
+<ul>
+<li></li>
+bin lower bound
+<p></p>
+<li></li>
+bin upper bound
+<p></p>
+<li></li>
+total number of halos in this bin
+<p></p>
+<li></li>
+a hash table with redshift keys pointing to how many halos formed at that redshift
+<p></p></ul>
+<p>Example of usage:</p>
+<pre>
+        my @dump = &amp;parse_datafile($analyzer-&gt;simu_dumpfile());
+        @dump = $analyzer-&gt;modify_halodump([@dump]);
+        my @hist = $analyzer-&gt;formation_time_histogram(\@dump,
+                [1.0e10, 5.0e10], [5.0e10, 1.0e11]);</pre>
+<pre>
+        foreach my $bin (@hist) {
+                print &quot;There are $bin-&gt;[2] main halos in &quot;,
+                &quot;mass range [$bin-&gt;[0], $bin-&gt;[1]]\n&quot;;
+        }</pre>
+<p>
+</p>
+<h2><a name="shared_particles___redshift__">shared_particles ( REDSHIFT )</a></h2>
+<p>Uses _mtree files to calculate various results about how the halos at
+<code>REDSHIFT</code> and one output time earlier shared particles with each other.</p>
+<p>Arguments: <code>REDSHIFT</code> -- a string value. Best obtained from the <a href="#item_z_values">z_values</a>
+array.</p>
+<p>Return value: A hash table keyed with halo indexes at <code>REDSHIFT</code> pointing to
+a array references, which contain:</p>
+<ul>
+<li></li>
+Number of particles of the halo (<code>N</code>).
+<p></p>
+<li></li>
+Hash table with the indexes of the 
+<em>contributing halos at the previous redshift</em>
+pointing to array references containing:
+<ul>
+<li></li>
+Number of particles in the contributing halo (<code>N_c</code>).
+<p></p>
+<li></li>
+Number of shared particles between the two halos (<code>N_s</code>).
+<p></p>
+<li></li>
+Total number of its particles that the contributing halo shares with <em>any</em>
+halo at <code>REDSHIFT</code> (<code>N_a</code>).
+<p></p>
+<li></li>
+Fraction: <code>N_s/N</code>.
+<p></p>
+<li></li>
+Fraction: <code>N_s/N_c</code>.
+<p></p>
+<li></li>
+Fraction: <code>N_s/N_a</code>.
+<p></p></ul>
+</ul>
+<p>Example of usage:</p>
+<pre>
+        # Find out how many potential progenitors a halo at z=0 has.
+        my $redshift = $analyzer-&gt;z_values()-&gt;[0];
+        my %sp = $analyzer-&gt;shared_particles($redshift);
+        foreach my $halo (keys %sp) {
+                print &quot;Halo $halo received particles from &quot;,
+                        scalar(keys %{$sp{$halo}-&gt;[1]}), &quot; halos.\n&quot;;
+        }</pre>
+<p>
+</p>
+<h2><a name="merger_tree___criterion__halos__">merger_tree ( CRITERION, HALOS )</a></h2>
+<p>Constructs a merger tree for each halo in <code>HALOS</code>. This is done by applying
+the progenitor criterion <code>CRITERION</code> to the data from the
+<a href="#_shared_particles___redshift__">shared_particles</a> method to find the
+progenitors of each halo at the earlier simulation output redshift. Then the
+same process is performed again recursively on each progenitor until we have a
+a complete merger tree for each halo.</p>
+<p>Arguments:</p>
+<ul>
+<li></li>
+<code>CRITERION</code> -- an array reference with three parameters relating to progenitor
+candidate A (at an earlier redshift) to B, the halo currently examined 
+(at a later redshift):
+<ul>
+<li></li>
+Minimum fraction of particles in A that must be shared between A and B to
+consider A a progenitor of B. I.e. the minimum fraction of particles of A that
+must end up in B.
+<p></p>
+<li></li>
+Minimum amount of those particles in A that end up in <em>any</em> halo at the B's
+redshift that must end up in B to consider A a progenitor of B.
+<p></p>
+<li></li>
+Minimum mass that A must have in order to qualify as a progenitor at all.
+<p></p></ul>
+<p>All three of these conditions must be met for a halo to be added as
+a progenitor.</p>
+<li></li>
+<code>HALOS</code> -- an array of halo indexes at redshift z = 0.
+<p></p></ul>
+<p>Return value: <code>AMIGA::MergerTree</code> object. See <a href="..//AMIGA/MergerTree.html">the AMIGA::MergerTree manpage</a> for
+reference.</p>
+<p>Example of usage:</p>
+<pre>
+        # Construct a merger tree for some halos, with similar 
+        # criteria for the particle fractions (0.5, 0.7) as in 
+        # Wechsler et al, 2001
+        my @halo_indexes = (0, 1, 2);
+        my %mt = $analyzer-&gt;merger_tree([0.5, 0.7, 2.2e10],
+                        @halo_indexes);
+        # Get a by level view for each halo and print out how
+        # many progenitors there are at each z
+        foreach my $halo (keys %mt) {
+                print &quot;Halo $halo:\n&quot;;
+                my @lview = $mt{$halo}-&gt;level_view();
+                for (my $i=0; $i &lt; @lview; $i++) {
+                        printf &quot;At z=%f there are %d progenitors\n&quot;,
+                        $analyzer-&gt;z_values()-&gt;[$i],
+                        scalar(@{$lview[$i]});
+                }
+        }</pre>
+<p>
+</p>
+<h2><a name="correlation___args__">correlation ( ARGS )</a></h2>
+<p>Calculate values of the Landy-Szalay correlation function estimator for the
+given halo data using the given mass bins. Additionally a precalculated 
+binomial random field may be specified. This is recommended because there is
+no guarantee of the suitability of the Perl random number generator for
+Monte Carlo type simulations.</p>
+<p>The arguments should be passed as a hash table <code>ARGS</code> with the following
+keys:</p>
+<dl>
+<dt><strong><a name="item_halodata">halodata</a></strong><br />
+</dt>
+<dd>
+Reference to an array of _halos data. Easily obtained by using
+<a href="#get_all_halodata___redshift__">get_all_halodata</a> method for example.
+</dd>
+<p></p>
+<dt><strong><a name="item_bins">bins</a></strong><br />
+</dt>
+<dd>
+Reference to a 2D array with scale low and high bound columns
+for each row. If <a href="#item_trbins">trbins</a> are specified, then parallel bins should be
+specified here.
+</dd>
+<p></p>
+<dt><strong><a name="item_trbins">trbins</a></strong><br />
+</dt>
+<dd>
+Reference to a 2D array with transverse scale low and high bound columns
+for each row. If this key is specified, then the correlation is calculated
+separately for parallel and transverse components, taking the observer to
+be at point (0, 0, 0) corner of the box. The parallel scale bins are then
+specified in <a href="#item_bins">bins</a>.
+</dd>
+<p></p>
+<dt><strong><a name="item_field">field</a></strong><br />
+</dt>
+<dd>
+<em>Optional.</em> Reference to a 2D array with x, y and z columns containing
+a binomial random field.
+</dd>
+<p></p></dl>
+<p>Return value: 2D array containing correlation data. See <a href="..//AMIGA/Correlation.html">the AMIGA::Correlation manpage</a>
+for reference.</p>
+<p>Example of usage:</p>
+<pre>
+        # Calculate a correlation using an precalculated binomial field
+        my @c = $analyzer-&gt;correlation(
+                halodata =&gt; \@halodata,
+                bins =&gt; [[0.01, 0.1], [0.1, 10], [10, 100]],
+                field =&gt; \@binomial_field);
+        # Print results
+        print &quot;r_min r_max ksi error\n&quot;;
+        for (@c) {
+                print join(&quot; &quot;, @$_), &quot;\n&quot;;
+        }</pre>
+<p>
+</p>
+<h2><a name="z_to_gyr___redshift__">z_to_gyr ( REDSHIFT )</a></h2>
+<p>Convert redshift to gigayears using the value of <a href="#item_hubble_constant">hubble_constant</a> attribute,
+and the redshift - scale parameter - time correspondency extracted from the
+<a href="#item_simu_logfile">simu_logfile</a>.  Note: Returns time counted from the beginning of the
+universe, <em>not</em> the lookback time.</p>
+<p>Arguments: <code>REDSHIFT</code> -- a string value. Best obtained from the 
+<a href="#item_z_values">z_values</a> array.</p>
+<p>Return value: A scalar value of the time elapsed corresponding to <code>REDSHIFT</code>.
+Returns undef in case of error.</p>
+<p>Example of usage:</p>
+<pre>
+        # First simulation redshift is usually z = 0, and converting
+        # this to time should yield the age of the universe.
+        my $age = $analyzer-&gt;z_to_gyr($analyzer-&gt;z_values()-&gt;[0]);
+        print &quot;Age of the universe is: $age\n&quot;;</pre>
+<p>
+</p>
+<h2><a name="realspace_to_z_space___halodata__point__">realspace_to_z_space ( HALODATA, POINT )</a></h2>
+<p>Adjust the halo positions in <code>HALODATA</code> based on the halo velocities and
+the observation point given in <code>POINT</code>. The result is the redshift space
+distribution of the halos as seen from <code>POINT</code>.</p>
+<p>Arguments:</p>
+<ul>
+<li></li>
+<code>HALODATA</code> -- an array reference to _halos file data.
+<p></p>
+<li></li>
+<code>POINT</code> -- an array reference containing the x, y and z components of the
+observation point
+<p></p></ul>
+<p>Return value: Copy of the <code>HALODATA</code> structure with the positions
+adjusted according to the velocities and the observation point.</p>
+<p>Example of usage:</p>
+<pre>
+        # Adjust the halo positions to what we would observe in redshift
+        # space from (0, 0, 0) corner of the simulation box.
+        my @halodata = $analyzer-&gt;get_all_halodata(
+                                $analyzer-&gt;z_values()-&gt;[0]);
+        my @zdata = $analyzer-&gt;realspace_to_z_space(\@halodata, [0, 0, 0]);</pre>
+<p>
+</p>
+<hr />
+<h1><a name="utility_functions">UTILITY FUNCTIONS</a></h1>
+<p>These functions are static and don't need to be invoked with an object
+or classname. However, each utility function must be separately imported
+using the standard way: <code>use AMIGA::HaloAnalyzer qw(func1 func2 foofunc);</code></p>
+<p>
+</p>
+<h2><a name="parse_datafile___file__">parse_datafile ( FILE )</a></h2>
+<p>Assumes that <code>FILE</code> contains columns of whitespace separated data. The file
+is read in and parsed into a 2D perl array, discarding rows
+beginning with #, which is taken as a comment delimiter. Note: No consistency
+checking of any kind is done so for example the number of columns could
+vary from line to line.</p>
+<p>Arguments: <code>FILE</code> -- a string value containing file name complete with 
+absolute or relative path.</p>
+<p>Return value: 2D Perl array containing the data read in from <code>FILE</code>.</p>
+<p>Example of usage:</p>
+<pre>
+        my $filename = $analyzer-&gt;data_path().&quot;/data.txt&quot;;
+        my @data = &amp;parse_datafile($filename);</pre>
+<p>
+</p>
+<h2><a name="get_mass_interval___halodata__low__high__">get_mass_interval ( HALODATA, LOW, HIGH )</a></h2>
+<p>Extracts the part of _halos data given in <code>HALODATA</code> that falls between
+limiting masses <code>LOW</code> and <code>HIGH</code>. Note: The content in <code>HALODATA</code> is
+assumed to be already sorted by mass in descending order, and is not resorted
+before searching. The search method used is a binary search, and will thus
+fail, if the data is not ordered.</p>
+<p>Arguments:</p>
+<ul>
+<li></li>
+<code>HALODATA</code> -- reference to a 2D array containing _halos data. Easily obtained
+by using for example the <code>get_all_halodata()</code> method.
+<p></p>
+<li></li>
+<code>LOW</code>, <code>HIGH</code> -- scalar values specifying the low and high mass limits.
+<p></p></ul>
+<p>Return value: An array reference containing:</p>
+<ul>
+<li></li>
+Splice of the data in <code>HALODATA</code> for halos with mass between <code>LOW</code> and
+<code>HIGH</code>.
+<p></p>
+<li></li>
+Array index corresponding to the highest mass (and thus lowest index value)
+in <code>HALODATA</code> that was included in the splice.
+<p></p>
+<li></li>
+Array index corresponding to the lowest mass (highest index value)
+in <code>HALODATA</code> that was included in the splice.
+<p></p></ul>
+<p>The return value can be expressed in Perl as (actual code):</p>
+<pre>
+        return ([@$halodata[$hi..$li], $hi, $li);</pre>
+<p>Example of usage:</p>
+<pre>
+        my @halodata = $analyzer-&gt;get_all_halodata(
+                                $analyzer-&gt;z_values()-&gt;[0]);
+        # Get only halos from certain mass range
+        my @slice = &amp;get_mass_interval(\@halodata, 1.0e9, 5.0e9);
+        # Replace original data.
+        @halodata = @{$slice[0]};</pre>
+<p>
+</p>
+<h2><a name="get_parameter_interval___halodata__index__low__high__">get_parameter_interval ( HALODATA, INDEX, LOW, HIGH )</a></h2>
+<p>Extracts the part of _halos data given in <code>HALODATA</code> that has the data
+at column <code>INDEX</code> (starting from 0) fall between
+limiting values <code>LOW</code> and <code>HIGH</code>. The data in <code>HALODATA</code> will be sorted
+by the that column first, and then the the limiting indexes are found by
+binary searching.</p>
+<p>Arguments:</p>
+<ul>
+<li></li>
+<code>HALODATA</code> -- reference to a 2D array containing _halos data. Easily obtained
+by using for example the <code>get_all_halodata()</code> method.
+<p></p>
+<li></li>
+<code>INDEX</code> -- column index of the _halos data. Indexing starts from 0.
+<p></p>
+<li></li>
+<code>LOW</code>, <code>HIGH</code> -- scalar values specifying the low and high limits.
+<p></p></ul>
+<p>Return value: The same as with the <code>get_mass_interval()</code> method, except that
+the halo data splice will be sorted by the values in the given column, in
+descending order.</p>
+<p>Example of usage:</p>
+<pre>
+        my @halodata = $analyzer-&gt;get_all_halodata(
+                                $analyzer-&gt;z_values()-&gt;[0]);
+        # Get only halos from certain particle amount range
+        my @slice = &amp;get_parameter_interval(\@halodata, 
+                                0, 5000, 15000);
+        # Replace original data.
+        @halodata = @{$slice[0]};</pre>
+<p>
+</p>
+<hr />
+<h1><a name="notes">NOTES</a></h1>
+<p>
+</p>
+<h2><a name="redshifts">REDSHIFTS</a></h2>
+<p>The redshifts in <a href="#item_z_values">z_values</a> array are extracted from the filenames found from
+<a href="#item_data_path">data_path</a>. Thus they are represented as strings so that when needed, they
+can be converted back to filenames by simple substitution.</p>
+<p>What this means is that passing explicit numeric values for methods that
+require redshift values is not a good idea, and most of the time will not
+work. The redshifts should always be fetched from the <a href="#item_z_values">z_values</a> array.</p>
+<p>
+</p>
+<h2><a name="data_representation">DATA REPRESENTATION</a></h2>
+<p>The difference between methods requiring halo data (found in _halos files), 
+halodump data (found in the <a href="#item_simu_dumpfile">simu_dumpfile</a>) and modified halodump data
+(halodump data processed with the 
+<a href="#modify_halodump___halodump__">modify_halodump</a> method) should be 
+carefully observed.</p>
+<p>All of these data types are manipulated internally as simple Perl 2D arrays,
+and the methods don't really do very through validation of data arguments.
+Thus passing wrong type of data could succeed without any errors, but the
+results will be unpredictably bizarre.</p>
+<p>In addition, when reading in data from a file, it is recommended that
+the <a href="#parse_datafile___file__">parse_datafile</a> function be used. It 
+automatically strips comments
+from the file. It doesn't check that every row has an equal amount of columns
+though, so if extra care is needed, then data consistency should be verified
+manually. Giving data with variable column amount as parameter to a method
+will at best result in an error or warning, but could go unnoticed and
+cause in unpredictable results.</p>
+<p>
+</p>
+<hr />
+<h1><a name="author">AUTHOR</a></h1>
+<p>Written in 2006 for the benefit of Tuorla Observatory Cosmological Simulations
+research group by Pauli Pihajoki.</p>
+<p>
+</p>
+<hr />
+<h1><a name="copyright">COPYRIGHT</a></h1>
+<p>Copyright (c) 2006 Pauli Pihajoki. All rights reserved. This program is
+free software; you can redistribute it and/or modify it under the same terms
+as Perl itself.</p>
+
+</body>
+
+</html>
